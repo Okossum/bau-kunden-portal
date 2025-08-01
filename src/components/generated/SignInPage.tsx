@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle, Loader2, Building2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
+import PasswordResetModal from './PasswordResetModal';
+
 interface FormData {
   email: string;
   password: string;
 }
+
 interface FormErrors {
   email?: string;
   password?: string;
   general?: string;
 }
+
 const SignInPage: React.FC = () => {
+  const { login, resetPassword, currentUser, error: authError, clearError } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: ''
@@ -19,6 +25,7 @@ const SignInPage: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -60,31 +67,39 @@ const SignInPage: React.FC = () => {
       }));
     }
   };
+  // Clear auth errors when component mounts or when user starts typing
+  useEffect(() => {
+    if (authError) {
+      setErrors({ general: authError });
+    }
+  }, [authError]);
+
+  // Clear form errors when user starts typing
+  useEffect(() => {
+    if (errors.email || errors.password || errors.general) {
+      clearError();
+    }
+  }, [formData.email, formData.password]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     setIsLoading(true);
+    setErrors({});
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Simulate authentication failure for demo
-      if (formData.email !== 'admin@construction.com' || formData.password !== 'password123') {
-        setErrors({
-          general: 'Ungültige E-Mail-Adresse oder Passwort. Bitte versuchen Sie es erneut.'
-        });
-      } else {
-        // Success - in real app, redirect would happen here
-        console.log('Authentication successful');
-      }
+      await login(formData.email, formData.password);
+      // Success - user will be redirected automatically via AuthContext
     } catch (error) {
-      setErrors({
-        general: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'
-      });
+      // Error is already handled in AuthContext and displayed via authError
+      console.error('Login failed:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+
   const isFormValid = formData.email && formData.password && validateEmail(formData.email) && formData.password.length >= 6;
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <motion.div initial={{
@@ -206,7 +221,11 @@ const SignInPage: React.FC = () => {
 
             {/* Forgot Password Link */}
             <div className="text-center">
-              <button type="button" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors" onClick={() => console.log('Navigate to forgot password')}>
+              <button 
+                type="button" 
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors" 
+                onClick={() => setShowResetModal(true)}
+              >
                 Passwort vergessen?
               </button>
             </div>
@@ -220,6 +239,12 @@ const SignInPage: React.FC = () => {
           </p>
         </footer>
       </motion.div>
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal 
+        isOpen={showResetModal} 
+        onClose={() => setShowResetModal(false)} 
+      />
     </div>;
 };
 export default SignInPage;
