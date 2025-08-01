@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Download, Eye, Calendar, FileText } from 'lucide-react';
+import { Search, Download, Eye, Calendar, FileText, Folder, FolderOpen } from 'lucide-react';
 import { User, Project, Document } from './DocumentPortal';
 
 interface ClientDocumentViewProps {
@@ -9,12 +9,21 @@ interface ClientDocumentViewProps {
   currentUser: User;
 }
 
+// Document categories/folders
+const DOCUMENT_CATEGORIES = {
+  'pläne': ['pdf', 'dwg', 'dxf', 'rvt', 'skp'],
+  'verträge': ['pdf', 'doc', 'docx'],
+  'genehmigungen': ['pdf', 'jpg', 'jpeg', 'png'],
+  'bilder': ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'svg']
+};
+
 const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
   projects,
   documents,
   currentUser
 }) => {
   const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [selectedFolder, setSelectedFolder] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date');
 
@@ -25,7 +34,16 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesProject && matchesSearch;
+    // Filter by folder/category
+    const matchesFolder = selectedFolder === 'all' || 
+      Object.entries(DOCUMENT_CATEGORIES).some(([category, extensions]) => {
+        if (selectedFolder === category) {
+          return extensions.some(ext => doc.type.toLowerCase().includes(ext));
+        }
+        return false;
+      });
+    
+    return matchesProject && matchesSearch && matchesFolder;
   });
 
   // Sort documents
@@ -40,6 +58,19 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
         return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
     }
   });
+
+  // Get documents by category
+  const getDocumentsByCategory = (category: string) => {
+    const extensions = DOCUMENT_CATEGORIES[category as keyof typeof DOCUMENT_CATEGORIES] || [];
+    return documents.filter(doc => 
+      extensions.some(ext => doc.type.toLowerCase().includes(ext))
+    );
+  };
+
+  // Get folder icon
+  const getFolderIcon = (category: string) => {
+    return selectedFolder === category ? <FolderOpen className="w-5 h-5" /> : <Folder className="w-5 h-5" />;
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -138,20 +169,81 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
         </div>
       </div>
 
+      {/* Document Folders */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Dokumentenordner</h3>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Object.entries(DOCUMENT_CATEGORIES).map(([category, extensions]) => {
+            const categoryDocuments = getDocumentsByCategory(category);
+            const isSelected = selectedFolder === category;
+            
+            return (
+              <motion.button
+                key={category}
+                onClick={() => setSelectedFolder(isSelected ? 'all' : category)}
+                className={`p-4 border rounded-lg transition-all ${
+                  isSelected 
+                    ? 'border-blue-500 bg-blue-50 shadow-md' 
+                    : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`${isSelected ? 'text-blue-600' : 'text-slate-600'}`}>
+                    {getFolderIcon(category)}
+                  </div>
+                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                    {categoryDocuments.length}
+                  </span>
+                </div>
+                <h4 className={`font-medium text-sm capitalize ${
+                  isSelected ? 'text-blue-900' : 'text-slate-900'
+                }`}>
+                  {category === 'pläne' ? 'Pläne' :
+                   category === 'verträge' ? 'Verträge' :
+                   category === 'genehmigungen' ? 'Genehmigungen' : 'Bilder'}
+                </h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  {extensions.join(', ').toUpperCase()}
+                </p>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Documents Section */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-slate-900">
-              Dokumente ({sortedDocuments.length})
+              {selectedFolder === 'all' ? 'Alle Dokumente' : 
+               selectedFolder === 'pläne' ? 'Pläne' :
+               selectedFolder === 'verträge' ? 'Verträge' :
+               selectedFolder === 'genehmigungen' ? 'Genehmigungen' : 'Bilder'} 
+              ({sortedDocuments.length})
             </h3>
             
-            <button
-              onClick={() => setSelectedProject('all')}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Alle anzeigen
-            </button>
+            <div className="flex items-center gap-2">
+              {selectedFolder !== 'all' && (
+                <button
+                  onClick={() => setSelectedFolder('all')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Alle Ordner
+                </button>
+              )}
+              {selectedProject !== 'all' && (
+                <button
+                  onClick={() => setSelectedProject('all')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Alle Projekte
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Filters */}
@@ -199,7 +291,7 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
             <div className="text-center py-12">
               <div className="text-4xl mb-4">📁</div>
               <p className="text-slate-600">
-                {searchTerm || selectedProject !== 'all'
+                {searchTerm || selectedProject !== 'all' || selectedFolder !== 'all'
                   ? 'Keine Dokumente gefunden.'
                   : 'Noch keine Dokumente für Sie verfügbar.'}
               </p>
@@ -268,7 +360,7 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
           <div className="text-2xl font-bold text-blue-600 mb-2">{projects.length}</div>
           <div className="text-sm text-slate-600">Aktive Projekte</div>
@@ -284,6 +376,13 @@ const ClientDocumentView: React.FC<ClientDocumentViewProps> = ({
             {formatFileSize(documents.reduce((total, doc) => total + doc.size, 0))}
           </div>
           <div className="text-sm text-slate-600">Gesamtgröße</div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6 text-center">
+          <div className="text-2xl font-bold text-orange-600 mb-2">
+            {Object.keys(DOCUMENT_CATEGORIES).length}
+          </div>
+          <div className="text-sm text-slate-600">Dokumentenordner</div>
         </div>
       </div>
     </div>
