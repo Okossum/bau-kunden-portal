@@ -6,11 +6,15 @@ import NotificationPanel from './NotificationPanel';
 import KPIsPanel from './KPIsPanel';
 import { useAuth } from '../../contexts/AuthContext';
 
-const CustomerDashboard: React.FC = () => {
+interface CustomerDashboardProps {
+  onNavigateToDocuments: () => void;
+}
+
+const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onNavigateToDocuments }) => {
   const { currentUser, userData, logout } = useAuth();
-  return <div className="min-h-screen bg-slate-50 flex">
+      return <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar Navigation */}
-      <SidebarNavigation />
+      <SidebarNavigation onNavigateToDocuments={onNavigateToDocuments} />
       
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-64 p-4 lg:p-8 overflow-y-auto">

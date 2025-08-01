@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Theme } from './settings/types';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { auth } from './lib/firebase';
 import SignInPage from './components/generated/SignInPage';
 import CustomerDashboard from './components/generated/CustomerDashboard';
+import DocumentPortal from './components/generated/DocumentPortal';
 import PasswortNeuEingabe from './components/generated/PasswortNeuEingabe';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -11,6 +12,7 @@ let theme: Theme = 'light';
 
 function AppContent() {
   const { currentUser, loading } = useAuth();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'documents'>('dashboard');
 
   function setTheme(theme: Theme) {
     if (theme === 'dark') {
@@ -44,11 +46,15 @@ function AppContent() {
     );
   }
 
-  // If user is authenticated, show dashboard
+  // If user is authenticated, show dashboard or documents
   if (currentUser) {
     return (
       <ProtectedRoute>
-        <CustomerDashboard />
+        {currentView === 'dashboard' ? (
+          <CustomerDashboard onNavigateToDocuments={() => setCurrentView('documents')} />
+        ) : (
+          <DocumentPortal onNavigateToDashboard={() => setCurrentView('dashboard')} />
+        )}
       </ProtectedRoute>
     );
   }

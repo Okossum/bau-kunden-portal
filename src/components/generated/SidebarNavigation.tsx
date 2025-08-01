@@ -9,15 +9,25 @@ interface NavItem {
     className?: string;
   }>;
   active?: boolean;
+  onClick?: () => void;
 }
-const SidebarNavigation: React.FC = () => {
+interface SidebarNavigationProps {
+  onNavigateToDocuments?: () => void;
+  onNavigateToDashboard?: () => void;
+}
+
+const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ 
+  onNavigateToDocuments, 
+  onNavigateToDashboard 
+}) => {
   const { currentUser, userData, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navItems: NavItem[] = [{
     id: 'dashboard',
     label: 'Dashboard',
     icon: Home,
-    active: true
+    active: true,
+    onClick: onNavigateToDashboard
   }, {
     id: 'projects',
     label: 'Projekte',
@@ -25,7 +35,8 @@ const SidebarNavigation: React.FC = () => {
   }, {
     id: 'documents',
     label: 'Dokumente',
-    icon: FileText
+    icon: FileText,
+    onClick: onNavigateToDocuments
   }, {
     id: 'calendar',
     label: 'Termine',
@@ -90,7 +101,12 @@ const SidebarNavigation: React.FC = () => {
                         w-full flex items-center gap-3 px-4 py-3 rounded-xl
                         text-left transition-all duration-200
                         ${item.active ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}
-                      `} onClick={() => setIsMobileMenuOpen(false)}>
+                      `} onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        if (item.onClick) {
+                          item.onClick();
+                        }
+                      }}>
                       <Icon className={`w-5 h-5 ${item.active ? 'text-blue-600' : 'text-slate-500'}`} />
                       <span className="font-medium">{item.label}</span>
                     </motion.button>
