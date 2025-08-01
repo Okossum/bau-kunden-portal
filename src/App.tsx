@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 import { Theme } from './settings/types';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { auth } from './lib/firebase';
 import SignInPage from './components/generated/SignInPage';
 import CustomerDashboard from './components/generated/CustomerDashboard';
 import PasswortNeuEingabe from './components/generated/PasswortNeuEingabe';
+import TwoFactorAuth from './components/generated/TwoFactorAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 
 let theme: Theme = 'light';
 
 function AppContent() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, twoFactorRequired, completeTwoFactor } = useAuth();
 
   function setTheme(theme: Theme) {
     if (theme === 'dark') {
@@ -45,6 +47,20 @@ function AppContent() {
 
   // If user is authenticated, show dashboard
   if (currentUser) {
+    // Show 2FA if required
+    if (twoFactorRequired) {
+      return (
+        <TwoFactorAuth
+          email={currentUser.email || ''}
+          onSuccess={completeTwoFactor}
+          onCancel={() => {
+            // Logout bei Abbruch
+            auth.signOut();
+          }}
+        />
+      );
+    }
+
     return (
       <ProtectedRoute>
         <CustomerDashboard />

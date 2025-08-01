@@ -10,6 +10,8 @@ export interface UserData {
   projects?: string[]; // Array of project IDs the user has access to
   createdAt: Date;
   lastLoginAt: Date;
+  twoFactorEnabled: boolean;
+  twoFactorCompleted: boolean;
 }
 
 // User service class for handling user-related operations
@@ -29,7 +31,9 @@ export class UserService {
       tenantId: undefined, // Should be fetched from database
       projects: [], // Should be fetched from database
       createdAt: new Date(user.metadata.creationTime || Date.now()),
-      lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now())
+      lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
+      twoFactorEnabled: true, // 2FA ist standardmäßig aktiviert
+      twoFactorCompleted: false // 2FA muss noch abgeschlossen werden
     };
   }
 

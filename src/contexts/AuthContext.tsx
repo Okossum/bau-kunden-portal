@@ -9,15 +9,18 @@ import {
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { UserData, UserService } from '../services/userService';
+import TwoFactorService from '../services/twoFactorService';
 
 // Authentication context interface
 interface AuthContextType {
   currentUser: User | null;
   userData: UserData | null;
   loading: boolean;
+  twoFactorRequired: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  completeTwoFactor: () => Promise<void>;
   error: string | null;
   clearError: () => void;
 }
@@ -44,13 +47,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Login function
   const login = async (email: string, password: string) => {
     try {
       setError(null);
+      setTwoFactorRequired(false);
+      
       await signInWithEmailAndPassword(auth, email, password);
+      
+      // Nach erfolgreichem Login prüfen, ob 2FA erforderlich ist
+      const user = auth.currentUser;
+      if (user) {
+        const userData = await UserService.getUserData(user);
+        if (userData.twoFactorEnabled && !userData.twoFactorCompleted) {
+          setTwoFactorRequired(true);
+        }
+      }
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
@@ -86,6 +101,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
+      setTwoFactorRequired(false);
+      
+      // 2FA Code entfernen
+      if (currentUser?.email) {
+        TwoFactorService.removeCode(currentUser.email);
+      }
+      
       await signOut(auth);
     } catch (error) {
       const authError = error as AuthError;
@@ -140,6 +162,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Complete two-factor authentication
+  const completeTwoFactor = async () => {
+    try {
+      setError(null);
+      
+      if (currentUser) {
+        // In einer echten Anwendung würden Sie hier die User-Daten in der Datenbank aktualisieren
+        // await updateUserTwoFactorStatus(currentUser.uid, true);
+        
+        setTwoFactorRequired(false);
+        
+        // User-Daten aktualisieren
+        const updatedUserData = await UserService.getUserData(currentUser);
+        updatedUserData.twoFactorCompleted = true;
+        setUserData(updatedUserData);
+      }
+    } catch (error) {
+      console.error('Error completing 2FA:', error);
+      setError('Fehler beim Abschließen der Zwei-Faktor-Authentifizierung.');
+      throw error;
+    }
+  };
+
   // Clear error function
   const clearError = () => {
     setError(null);
@@ -158,6 +203,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           // Update last login timestamp
           await UserService.updateLastLogin(user.uid);
+          
+          // Prüfe 2FA Status
+          if (userData.twoFactorEnabled && !userData.twoFactorCompleted) {
+            setTwoFactorRequired(true);
+          } else {
+            setTwoFactorRequired(false);
+          }
         } catch (error) {
           console.error('Error fetching user data:', error);
           // Set basic user data if fetching fails
@@ -166,11 +218,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             email: user.email || '',
             role: 'customer',
             createdAt: new Date(),
-            lastLoginAt: new Date()
+            lastLoginAt: new Date(),
+            twoFactorEnabled: true,
+            twoFactorCompleted: false
           });
+          setTwoFactorRequired(true);
         }
       } else {
         setUserData(null);
+        setTwoFactorRequired(false);
       }
       
       setLoading(false);
@@ -184,9 +240,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     currentUser,
     userData,
     loading,
+    twoFactorRequired,
     login,
     logout,
     resetPassword,
+    completeTwoFactor,
     error,
     clearError
   };
