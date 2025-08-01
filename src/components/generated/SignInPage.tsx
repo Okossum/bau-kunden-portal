@@ -5,13 +5,11 @@ import { cn } from '../../lib/utils';
 interface FormData {
   email: string;
   password: string;
-  mpid?: string;
 }
 interface FormErrors {
   email?: string;
   password?: string;
   general?: string;
-  mpid?: string;
 }
 const SignInPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -88,7 +86,7 @@ const SignInPage: React.FC = () => {
     }
   };
   const isFormValid = formData.email && formData.password && validateEmail(formData.email) && formData.password.length >= 6;
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4" data-magicpath-id="0" data-magicpath-path="SignInPage.tsx">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <motion.div initial={{
       opacity: 0,
       y: 20
@@ -98,9 +96,9 @@ const SignInPage: React.FC = () => {
     }} transition={{
       duration: 0.6,
       ease: "easeOut"
-    }} className="w-full max-w-md" data-magicpath-id="1" data-magicpath-path="SignInPage.tsx">
+    }} className="w-full max-w-md">
         {/* Header Section */}
-        <header className="text-center mb-8" data-magicpath-id="2" data-magicpath-path="SignInPage.tsx">
+        <header className="text-center mb-8">
           <motion.div initial={{
           scale: 0.8
         }} animate={{
@@ -108,16 +106,16 @@ const SignInPage: React.FC = () => {
         }} transition={{
           delay: 0.2,
           duration: 0.5
-        }} className="mb-6" data-magicpath-id="3" data-magicpath-path="SignInPage.tsx">
+        }} className="mb-6">
             {/* MATHI HOFFER Logo */}
-            <div className="relative inline-block" data-magicpath-id="4" data-magicpath-path="SignInPage.tsx">
-              <img className="h-16 w-auto mx-auto mb-4" aria-label="MATHI HOFFER Logo" data-magicpath-id="5" data-magicpath-path="SignInPage.tsx" style={{
+            <div className="relative inline-block">
+              <img className="h-16 w-auto mx-auto mb-4" aria-label="MATHI HOFFER Logo" style={{
               height: "108px"
             }} src="https://storage.googleapis.com/storage.magicpath.ai/user/295045006568357888/assets/fac56912-1e45-472e-9fff-f03f1766e480.png" />
             </div>
           </motion.div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2" data-magicpath-id="9" data-magicpath-path="SignInPage.tsx">Kundenportal</h1>
-          <p className="text-slate-600 text-sm" data-magicpath-id="10" data-magicpath-path="SignInPage.tsx">Ihr Zugang zu Bauprojekten und Dokumenten</p>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Kundenportal</h1>
+          <p className="text-slate-600 text-sm">Ihr Zugang zu Bauprojekten und Dokumenten</p>
         </header>
 
         {/* Login Card */}
@@ -130,20 +128,20 @@ const SignInPage: React.FC = () => {
       }} transition={{
         delay: 0.3,
         duration: 0.5
-      }} className="bg-white rounded-3xl shadow-xl border border-slate-200/50 p-8" data-magicpath-id="11" data-magicpath-path="SignInPage.tsx">
-          <div className="mb-6" data-magicpath-id="12" data-magicpath-path="SignInPage.tsx">
-            <h2 className="text-xl font-semibold text-slate-800 mb-2" data-magicpath-id="13" data-magicpath-path="SignInPage.tsx">Anmelden</h2>
-            <p className="text-slate-600 text-sm" data-magicpath-id="14" data-magicpath-path="SignInPage.tsx">Zugang zu Ihren Bauprojekten und Dokumenten</p>
+      }} className="bg-white rounded-3xl shadow-xl border border-slate-200/50 p-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">Anmelden</h2>
+            <p className="text-slate-600 text-sm">Zugang zu Ihren Bauprojekten und Dokumenten</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" data-magicpath-id="15" data-magicpath-path="SignInPage.tsx">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
-            <div className="space-y-2" data-magicpath-id="16" data-magicpath-path="SignInPage.tsx">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700" data-magicpath-id="17" data-magicpath-path="SignInPage.tsx">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 E-Mail-Adresse
               </label>
-              <div className="relative" data-magicpath-id="18" data-magicpath-path="SignInPage.tsx">
-                <input id="email" type="email" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} placeholder="Ihre E-Mail-Adresse eingeben" className={cn("w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20", errors.email ? "border-red-300 bg-red-50/50 focus:border-red-400" : "border-slate-200 bg-slate-50/50 focus:border-blue-300 focus:bg-white")} data-magicpath-id="19" data-magicpath-path="SignInPage.tsx" />
+              <div className="relative">
+                <input id="email" type="email" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} placeholder="Ihre E-Mail-Adresse eingeben" className={cn("w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20", errors.email ? "border-red-300 bg-red-50/50 focus:border-red-400" : "border-slate-200 bg-slate-50/50 focus:border-blue-300 focus:bg-white")} />
               </div>
               {errors.email && <motion.div initial={{
               opacity: 0,
@@ -151,21 +149,21 @@ const SignInPage: React.FC = () => {
             }} animate={{
               opacity: 1,
               y: 0
-            }} className="flex items-center gap-2 text-red-600 text-sm" data-magicpath-id="20" data-magicpath-path="SignInPage.tsx">
-                  <AlertCircle className="w-4 h-4" data-magicpath-id="21" data-magicpath-path="SignInPage.tsx" />
-                  <span data-magicpath-id="22" data-magicpath-path="SignInPage.tsx">{errors.email}</span>
+            }} className="flex items-center gap-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.email}</span>
                 </motion.div>}
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2" data-magicpath-id="23" data-magicpath-path="SignInPage.tsx">
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700" data-magicpath-id="24" data-magicpath-path="SignInPage.tsx">
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Passwort
               </label>
-              <div className="relative" data-magicpath-id="25" data-magicpath-path="SignInPage.tsx">
-                <input id="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={e => handleInputChange('password', e.target.value)} placeholder="Ihr Passwort eingeben" className={cn("w-full px-4 py-3 pr-12 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20", errors.password ? "border-red-300 bg-red-50/50 focus:border-red-400" : "border-slate-200 bg-slate-50/50 focus:border-blue-300 focus:bg-white")} data-magicpath-id="26" data-magicpath-path="SignInPage.tsx" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" data-magicpath-id="27" data-magicpath-path="SignInPage.tsx">
-                  {showPassword ? <EyeOff className="w-5 h-5" data-magicpath-id="28" data-magicpath-path="SignInPage.tsx" /> : <Eye className="w-5 h-5" data-magicpath-id="29" data-magicpath-path="SignInPage.tsx" />}
+              <div className="relative">
+                <input id="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={e => handleInputChange('password', e.target.value)} placeholder="Ihr Passwort eingeben" className={cn("w-full px-4 py-3 pr-12 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20", errors.password ? "border-red-300 bg-red-50/50 focus:border-red-400" : "border-slate-200 bg-slate-50/50 focus:border-blue-300 focus:bg-white")} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {errors.password && <motion.div initial={{
@@ -174,9 +172,9 @@ const SignInPage: React.FC = () => {
             }} animate={{
               opacity: 1,
               y: 0
-            }} className="flex items-center gap-2 text-red-600 text-sm" data-magicpath-id="30" data-magicpath-path="SignInPage.tsx">
-                  <AlertCircle className="w-4 h-4" data-magicpath-id="31" data-magicpath-path="SignInPage.tsx" />
-                  <span data-magicpath-id="32" data-magicpath-path="SignInPage.tsx">{errors.password}</span>
+            }} className="flex items-center gap-2 text-red-600 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.password}</span>
                 </motion.div>}
             </div>
 
@@ -187,10 +185,10 @@ const SignInPage: React.FC = () => {
           }} animate={{
             opacity: 1,
             scale: 1
-          }} className="p-4 bg-red-50 border border-red-200 rounded-xl" data-magicpath-id="33" data-magicpath-path="SignInPage.tsx">
-                <div className="flex items-center gap-3 text-red-700" data-magicpath-id="34" data-magicpath-path="SignInPage.tsx">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" data-magicpath-id="35" data-magicpath-path="SignInPage.tsx" />
-                  <span className="text-sm font-medium" data-magicpath-id="36" data-magicpath-path="SignInPage.tsx">{errors.general}</span>
+          }} className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center gap-3 text-red-700">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-medium">{errors.general}</span>
                 </div>
               </motion.div>}
 
@@ -199,16 +197,16 @@ const SignInPage: React.FC = () => {
             scale: 1.02
           } : {}} whileTap={isFormValid && !isLoading ? {
             scale: 0.98
-          } : {}} className={cn("w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2", isFormValid && !isLoading ? "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl" : "bg-slate-300 cursor-not-allowed")} data-magicpath-id="37" data-magicpath-path="SignInPage.tsx">
+          } : {}} className={cn("w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2", isFormValid && !isLoading ? "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl" : "bg-slate-300 cursor-not-allowed")}>
               {isLoading ? <>
-                  <Loader2 className="w-5 h-5 animate-spin" data-magicpath-id="38" data-magicpath-path="SignInPage.tsx" />
-                  <span data-magicpath-id="39" data-magicpath-path="SignInPage.tsx">Anmelden...</span>
-                </> : <span data-magicpath-id="40" data-magicpath-path="SignInPage.tsx">Anmelden</span>}
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Anmelden...</span>
+                </> : <span>Anmelden</span>}
             </motion.button>
 
             {/* Forgot Password Link */}
-            <div className="text-center" data-magicpath-id="41" data-magicpath-path="SignInPage.tsx">
-              <button type="button" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors" onClick={() => console.log('Navigate to forgot password')} data-magicpath-id="42" data-magicpath-path="SignInPage.tsx">
+            <div className="text-center">
+              <button type="button" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors" onClick={() => console.log('Navigate to forgot password')}>
                 Passwort vergessen?
               </button>
             </div>
@@ -216,8 +214,8 @@ const SignInPage: React.FC = () => {
         </motion.div>
 
         {/* Footer */}
-        <footer className="text-center mt-8" data-magicpath-id="43" data-magicpath-path="SignInPage.tsx">
-          <p className="text-slate-500 text-xs" data-magicpath-id="44" data-magicpath-path="SignInPage.tsx">
+        <footer className="text-center mt-8">
+          <p className="text-slate-500 text-xs">
             © 2024 MATHI HOFFER. Sicheres Baukundenportal.
           </p>
         </footer>
