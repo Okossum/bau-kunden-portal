@@ -111,16 +111,9 @@ const SignInPage: React.FC = () => {
         }} className="mb-6" data-magicpath-id="3" data-magicpath-path="SignInPage.tsx">
             {/* MATHI HOFFER Logo */}
             <div className="relative inline-block" data-magicpath-id="4" data-magicpath-path="SignInPage.tsx">
-              <svg viewBox="0 0 800 200" className="h-16 w-auto mx-auto mb-4" aria-label="MATHI HOFFER Logo" data-magicpath-id="5" data-magicpath-path="SignInPage.tsx">
-                {/* House outline */}
-                <path d="M50 150 L150 50 L250 150 L250 180 L50 180 Z" fill="none" stroke="#D97706" strokeWidth="8" strokeLinejoin="round" data-magicpath-id="6" data-magicpath-path="SignInPage.tsx" />
-                <rect x="180" y="120" width="20" height="20" fill="#D97706" data-magicpath-id="7" data-magicpath-path="SignInPage.tsx" />
-                
-                {/* MATHI HOFFER Text */}
-                <text x="350" y="140" fill="#059669" fontSize="72" fontWeight="bold" fontFamily="Arial, sans-serif" data-magicpath-id="8" data-magicpath-path="SignInPage.tsx">
-                  MATHI HOFFER
-                </text>
-              </svg>
+              <img className="h-16 w-auto mx-auto mb-4" aria-label="MATHI HOFFER Logo" data-magicpath-id="5" data-magicpath-path="SignInPage.tsx" style={{
+              height: "108px"
+            }} src="https://storage.googleapis.com/storage.magicpath.ai/user/295045006568357888/assets/fac56912-1e45-472e-9fff-f03f1766e480.png" />
             </div>
           </motion.div>
           <h1 className="text-2xl font-bold text-slate-800 mb-2" data-magicpath-id="9" data-magicpath-path="SignInPage.tsx">Kundenportal</h1>
