@@ -32,8 +32,8 @@ export class UserService {
       projects: [], // Should be fetched from database
       createdAt: new Date(user.metadata.creationTime || Date.now()),
       lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
-      twoFactorEnabled: true, // 2FA ist standardmäßig aktiviert
-      twoFactorCompleted: false // 2FA muss noch abgeschlossen werden
+      twoFactorEnabled: false, // 2FA ist standardmäßig deaktiviert
+      twoFactorCompleted: true // 2FA ist abgeschlossen (da deaktiviert)
     };
   }
 
