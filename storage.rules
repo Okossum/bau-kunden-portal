@@ -1,0 +1,114 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user owns the file
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to extract userId from path
+    function getUserIdFromPath() {
+      return resource.name.split('/')[1];
+    }
+    
+    // Helper function to extract projectId from path
+    function getProjectIdFromPath() {
+      return resource.name.split('/')[2];
+    }
+    
+    // Helper function to check if user has access to project
+    function hasProjectAccess(projectId) {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/projects/$(projectId)/members/$(request.auth.uid));
+    }
+
+    // Documents folder - Multi-tenant document storage
+    match /documents/{userId}/{allPaths=**} {
+      // Allow read if user owns the file, has project access, or is admin
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || 
+         hasProjectAccess(getProjectIdFromPath()) || 
+         isAdmin());
+      
+      // Allow write if user owns the file or is admin
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        // Validate file size (50MB max)
+        request.resource.size < 50 * 1024 * 1024 &&
+        // Validate file type
+        request.resource.contentType.matches('image/.*|application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document|application/vnd.ms-excel|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|application/vnd.ms-powerpoint|application/vnd.openxmlformats-officedocument.presentationml.presentation|text/.*|application/zip|application/x-rar-compressed|video/.*|audio/.*');
+    }
+
+    // User avatars folder
+    match /avatars/{userId}/{fileName} {
+      // Allow read if user owns the avatar or is admin
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      
+      // Allow write if user owns the avatar or is admin
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        // Validate file size (5MB max for avatars)
+        request.resource.size < 5 * 1024 * 1024 &&
+        // Validate file type (images only)
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Project images folder
+    match /projects/{projectId}/images/{fileName} {
+      // Allow read if user has project access or is admin
+      allow read: if isAuthenticated() && 
+        (hasProjectAccess(projectId) || isAdmin());
+      
+      // Allow write if user has project access or is admin
+      allow write: if isAuthenticated() && 
+        (hasProjectAccess(projectId) || isAdmin()) &&
+        // Validate file size (10MB max for project images)
+        request.resource.size < 10 * 1024 * 1024 &&
+        // Validate file type (images only)
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Public assets folder (for future use)
+    match /public/{allPaths=**} {
+      // Allow read for everyone
+      allow read: if true;
+      
+      // Allow write only for admins
+      allow write: if isAdmin();
+    }
+
+    // Temporary uploads folder
+    match /temp/{userId}/{fileName} {
+      // Allow read if user owns the file or is admin
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      
+      // Allow write if user owns the file or is admin
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin()) &&
+        // Validate file size (100MB max for temp files)
+        request.resource.size < 100 * 1024 * 1024;
+      
+      // Allow delete if user owns the file or is admin
+      allow delete: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+    }
+
+    // Default deny all
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 
