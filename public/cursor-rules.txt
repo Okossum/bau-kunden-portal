@@ -1,35 +1,117 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww20860\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+1. Vollständige Code-Änderungen und Konsistenz
+Prüfe immer, ob ALLE relevanten Stellen im Code (z.B. UI, Backend, Datenbank, State-Management, Validierung, Fehlerbehandlung) geändert wurden.
 
-\f0\fs24 \cf0 ## Verhaltensregeln f\'fcr Code- und Layout\'e4nderungen\
-\
-1. **Beschr\'e4nkung auf das Wesentliche:**\
+Vergleiche ALT und NEU: Passe ALLE Stellen an, an denen sich die Datenstruktur, Felder oder das Verhalten geändert haben.
+
+Vermeide „teilweise“ Anpassungen: Jede Änderung (z.B. ein neues Feld) muss konsequent überall umgesetzt werden.
+
+2. CRUD-Operationen & Datenbankintegration
+Stelle sicher, dass alle neuen oder geänderten Felder korrekt in der Datenbank gespeichert, geladen, geupdatet und gelöscht werden.
+
+Baue alle erforderlichen Firestore/DB-Operationen ein (Create, Read, Update, Delete).
+
+Teste auch die Update- und Delete-Funktionen auf Konsistenz.
+
+Achte darauf, dass IDs, Foreign Keys oder Referenzen sauber verwaltet werden.
+
+3. Formulare & Dialoge
+Alle Eingabefelder müssen den aktuellen Stand der Daten abbilden.
+
+Neue Felder brauchen Platzhalter, Validierung und ggf. Default-Werte.
+
+Prüfe, ob alle Felder beim Öffnen mit den aktuellen Daten befüllt und beim Speichern korrekt übernommen werden.
+
+Beachte erforderliche Felder, Pflichtfelder, Standardwerte, Validierungen und Fehlerausgabe.
+
+4. UI-Feedback und Error-Handling
+Gib nach jedem Speichern/Ändern/Fehler ein klares visuelles Feedback (z.B. Success/Error-Meldung).
+
+Verhindere mehrfaches Absenden oder unerwünschte Doppeleinträge.
+
+Behandle alle möglichen Fehler (z.B. fehlende Felder, Netzwerkfehler, DB-Fehler) sauber ab.
+
+5. Filtern, Suchen, Listen & State
+Prüfe, ob neue Felder in Filter, Suchen, Listen und Sortierungen eingebunden werden.
+
+Achte darauf, dass Filter mit neuen Feldern funktionieren und angezeigt werden.
+
+Synchronisiere UI und State bei allen Änderungen und stelle sicher, dass alles live aktualisiert wird.
+
+6. Dokumentation und Kommentare
+Kommentiere neue oder geänderte Codebereiche sinnvoll und klar.
+
+Beschreibe komplexere Logik (z.B. Abhängigkeiten, Validierungen, Side Effects).
+
+7. Tests und Prüfung
+Stelle sicher, dass nach Änderungen alles wie erwartet funktioniert:
+
+Neues/Geändertes Feld wird überall angezeigt und verarbeitet
+
+Daten werden korrekt gespeichert, geladen, aktualisiert, gelöscht
+
+Filter und Suche funktionieren
+
+Validierung, Fehlerausgabe, UI-Feedback sind konsistent
+
+Mache ggf. eine kurze Testanleitung, wie die neue Funktion geprüft werden kann.
+
+8. Best Practices
+Halte dich an Best Practices für Struktur, Lesbarkeit, Wiederverwendbarkeit und Performance.
+
+Verwende Hooks, States und Context sauber und nachvollziehbar.
+
+Vermeide doppelten Code, baue Wiederverwendung ein (z.B. generische Form Components).
+
+9. Abschluss-Check
+Fasse am Ende jedes Prompts/Einsatzes diese Checkliste ab und bestätige, dass alles abgearbeitet wurde. Falls etwas nicht umsetzbar ist, erkläre warum.
+
+
+10. **Beschr\'e4nkung auf das Wesentliche:**\
    - F\'fchre ausschlie\'dflich die \'c4nderungen durch, die zur L\'f6sung des konkret gestellten Problems, Bugs oder zur Implementierung der jeweils genannten Anforderung notwendig sind.\
    - Ver\'e4ndere keine anderen Bereiche des Codes, der UI, des Layouts oder bestehender Funktionen, die nicht explizit Teil der aktuellen Aufgabenstellung sind.\
-\
-2. **Keine automatischen Layout- oder Design\'e4nderungen:**\
+
+11. **Keine automatischen Layout- oder Design\'e4nderungen:**\
    - Nimm **keine** Anpassungen am Layout, Design oder an der Anordnung von UI-Elementen vor, es sei denn, dies ist ausdr\'fccklich im Prompt gefordert.\
    - Die Optik der User- oder Admin-Seiten bleibt unver\'e4ndert, sofern keine explizite Anweisung zur \'c4nderung gegeben wurde.\
-\
-3. **Keine Funktions\'e4nderungen ohne klare Anweisung:**\
+
+12. **Keine Funktions\'e4nderungen ohne klare Anweisung:**\
    - \'c4ndere keine bestehenden Funktionen, Rechte, Rollen oder Interaktionen, au\'dfer dies ist ausdr\'fccklich vom User beauftragt.\
    - Insbesondere: Passe keine Schreib- oder Leserechte von Kunden ohne ausdr\'fcckliche Nachfrage oder Genehmigung an.\
-\
-4. **Vor jeder gr\'f6\'dferen \'c4nderung: R\'fcckfragepflicht**\
+
+13. **Vor jeder gr\'f6\'dferen \'c4nderung: R\'fcckfragepflicht**\
    - Bevor du umfassende oder mehrere Bereiche betreffende \'c4nderungen vorschl\'e4gst oder vornimmst, frage immer erst nach.\
    - Gib eine Zusammenfassung, was du tun m\'f6chtest, und warte auf Freigabe.\
-\
-5. **Zusammenfassung und Best\'e4tigung nach jeder \'c4nderung:**\
+
+14. **Zusammenfassung und Best\'e4tigung nach jeder \'c4nderung:**\
    - Erstelle nach jeder \'c4nderung eine kurze Liste mit allen tats\'e4chlich angepassten Dateien und Funktionen zur Nachkontrolle.\
-\
-6. **Nach jeder Code-Änderung:
+
+15. **Nach jeder Code-Änderung:
    - Schreibe bitte mindestens einen einfachen Smoke-Test, der die Hauptfunktion prüft (z.B. erfolgreicher Upload, Fehlerfall wie fehlende Datei etc.).
    - Zeige mir den Output, den ich beim Ausführen des Tests erwarten würde.
    - Liefere eine Schritt-für-Schritt-Anleitung, wie ich den Test ausführe.
    - Warne mich, falls für den Test noch Konfigurationen fehlen oder die Umgebung nicht vorbereitet ist.
-\
+
+16. Admin bleibt nach Anlegen eines neuen Benutzers eingeloggt. Es darf kein automatischer Login oder 
+   Session-Wechsel auf den neuen User erfolgen.
+
+17. Nur bei Self-Signup (Selbstregistrierung) darf nach erfolgreicher Registrierung ein automatischer Login stattfinden.
+
+18. Bevor du meinen Prompt direkt umsetzt, prüfe immer, ob es eine bessere, einfachere, stabilere oder elegantere Lösung gibt als das, was ich direkt verlange.
+
+Falls du eine Alternative findest, stelle mir die Alternative(n) kurz und klar vor (inkl. Vorteilen/Nachteilen).
+
+Frage mich, ob du diese Alternative stattdessen umsetzen sollst.
+
+Setze erst dann mit der tatsächlichen Code-Änderung fort, wenn ich eine Rückmeldung dazu gegeben habe.
+
+
+Prüfe, ob ein entsprechender Link, Button oder eine automatische Navigation zurück vorhanden ist.
+
+Falls nicht, baue einen „Zurück zum Hauptmenü“-Button, Link oder automatische Rückleitung ein.
+
+Stelle sicher, dass nach Speichern/Abbrechen auch ggf. die Haupt- oder Übersichtsseite aktualisiert/neu geladen wird (z. B. neue Einträge erscheinen).
+
+Der User darf nach Abschluss des Dialogs nicht auf einer „toten Seite“ hängen bleiben.
+
+Diese Regeln sind bei JEDER Änderung anzuwenden, auch bei kleinen Anpassungen!
 }

@@ -1,12 +1,4 @@
 import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject, 
-  listAll,
-  StorageReference 
-} from 'firebase/storage';
-import { 
   collection, 
   doc, 
   addDoc, 
@@ -16,133 +8,106 @@ import {
   query, 
   where, 
   orderBy, 
-  limit,
+  serverTimestamp,
   Timestamp,
-  DocumentData,
-  QueryDocumentSnapshot
+  getDoc
 } from 'firebase/firestore';
-import { storage, db } from '../lib/firebase';
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject,
+  StorageReference
+} from 'firebase/storage';
+import { db, storage } from '../lib/firebase';
 
-// Document metadata interface
-export interface DocumentMetadata {
+// Interfaces
+export interface Document {
   id?: string;
+  projectId: string;
+  folder: string;
   filename: string;
-  originalName: string;
-  description?: string;
-  fileType: string;
-  fileSize: number;
-  storageUrl: string;
-  storagePath: string;
-  userId: string;
-  projectId?: string;
-  tenantId?: string;
-  uploadedAt: Date;
-  updatedAt: Date;
+  originalFilename: string;
+  downloadUrl: string;
+  uploadedBy: string;
+  uploadedAt: Timestamp;
+  mandantId: string;
+  version: number;
+  type: string;
+  size: number;
   tags?: string[];
-  isPublic?: boolean;
-  downloadCount?: number;
-  lastAccessed?: Date;
+  meta?: Record<string, any>;
 }
 
-// Upload progress callback
-export interface UploadProgress {
-  progress: number; // 0-100
-  bytesTransferred: number;
-  totalBytes: number;
+export interface DocumentUpload {
+  file: File;
+  projectId: string;
+  folder: string;
+  tags?: string[];
+  meta?: Record<string, any>;
 }
 
-// Document service class for multi-tenant document management
+export interface DocumentFolder {
+  id: string;
+  name: string;
+  projectId: string;
+  mandantId: string;
+  createdAt: Timestamp;
+  createdBy: string;
+}
+
 export class DocumentService {
-  private static instance: DocumentService;
-  private readonly documentsCollection = 'documents';
-
-  private constructor() {}
-
-  static getInstance(): DocumentService {
-    if (!DocumentService.instance) {
-      DocumentService.instance = new DocumentService();
-    }
-    return DocumentService.instance;
-  }
+  private static readonly COLLECTION_NAME = 'documents';
+  private static readonly FOLDERS_COLLECTION = 'documentFolders';
 
   /**
-   * Generates a secure storage path for documents
-   * Format: documents/{userId}/{projectId?}/{timestamp}_{filename}
+   * Upload a document to Firebase Storage and create a document record
    */
-  private generateStoragePath(
-    userId: string, 
-    filename: string, 
-    projectId?: string
-  ): string {
-    const timestamp = Date.now();
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-    
-    if (projectId) {
-      return `documents/${userId}/${projectId}/${timestamp}_${sanitizedFilename}`;
-    }
-    return `documents/${userId}/${timestamp}_${sanitizedFilename}`;
-  }
-
-  /**
-   * Uploads a document to Firebase Storage and saves metadata to Firestore
-   */
-  async uploadDocument(
-    file: File,
-    userId: string,
-    description?: string,
-    projectId?: string,
-    tags?: string[],
-    onProgress?: (progress: UploadProgress) => void
-  ): Promise<DocumentMetadata> {
+  static async uploadDocument(
+    upload: DocumentUpload, 
+    mandantId: string, 
+    uploadedBy: string
+  ): Promise<Document> {
     try {
-      // Generate secure storage path
-      const storagePath = this.generateStoragePath(userId, file.name, projectId);
+      // Check if file with same name exists in the same folder
+      const existingDoc = await this.getDocumentByFilename(
+        upload.projectId, 
+        upload.folder, 
+        upload.file.name
+      );
+
+      const version = existingDoc ? existingDoc.version + 1 : 1;
+      
+      // Create storage path
+      const storagePath = `mandanten/${mandantId}/projekte/${upload.projectId}/${upload.folder}/${upload.file.name}`;
       const storageRef = ref(storage, storagePath);
 
       // Upload file to Firebase Storage
-      const uploadTask = uploadBytes(storageRef, file);
-      
-      // Monitor upload progress
-      if (onProgress) {
-        // Note: Firebase Storage doesn't provide progress callbacks in the current SDK
-        // For real progress tracking, you'd need to use a custom upload implementation
-        onProgress({ progress: 0, bytesTransferred: 0, totalBytes: file.size });
-      }
+      const snapshot = await uploadBytes(storageRef, upload.file);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
 
-      const snapshot = await uploadTask;
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      // Create document metadata
-      const documentMetadata: Omit<DocumentMetadata, 'id'> = {
-        filename: file.name,
-        originalName: file.name,
-        description: description || '',
-        fileType: file.type,
-        fileSize: file.size,
-        storageUrl: downloadURL,
-        storagePath: storagePath,
-        userId: userId,
-        projectId: projectId,
-        uploadedAt: new Date(),
-        updatedAt: new Date(),
-        tags: tags || [],
-        isPublic: false,
-        downloadCount: 0
+      // Create document record in Firestore
+      const documentData: Omit<Document, 'id'> = {
+        projectId: upload.projectId,
+        folder: upload.folder,
+        filename: upload.file.name,
+        originalFilename: upload.file.name,
+        downloadUrl,
+        uploadedBy,
+        uploadedAt: serverTimestamp() as Timestamp,
+        mandantId,
+        version,
+        type: upload.file.type,
+        size: upload.file.size,
+        tags: upload.tags || [],
+        meta: upload.meta || {}
       };
 
-      // Save metadata to Firestore
-      const docRef = await addDoc(
-        collection(db, this.documentsCollection),
-        {
-          ...documentMetadata,
-          uploadedAt: Timestamp.fromDate(documentMetadata.uploadedAt),
-          updatedAt: Timestamp.fromDate(documentMetadata.updatedAt)
-        }
-      );
-
+      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), documentData);
+      
       return {
-        ...documentMetadata,
-        id: docRef.id
+        id: docRef.id,
+        ...documentData
       };
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -151,151 +116,161 @@ export class DocumentService {
   }
 
   /**
-   * Retrieves documents for a specific user with optional project filter
+   * Get documents for a specific project and mandant
    */
-  async getUserDocuments(
-    userId: string,
-    projectId?: string,
-    limitCount: number = 50
-  ): Promise<DocumentMetadata[]> {
+  static async getDocumentsByProject(
+    projectId: string, 
+    mandantId: string
+  ): Promise<Document[]> {
     try {
-      let q = query(
-        collection(db, this.documentsCollection),
-        where('userId', '==', userId),
-        orderBy('uploadedAt', 'desc'),
-        limit(limitCount)
+      // Temporäre Lösung ohne Index - nur nach projectId und mandantId filtern
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('projectId', '==', projectId),
+        where('mandantId', '==', mandantId)
       );
 
-      // Add project filter if specified
-      if (projectId) {
-        q = query(
-          collection(db, this.documentsCollection),
-          where('userId', '==', userId),
-          where('projectId', '==', projectId),
-          orderBy('uploadedAt', 'desc'),
-          limit(limitCount)
-        );
-      }
-
       const querySnapshot = await getDocs(q);
-      const documents: DocumentMetadata[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        documents.push({
-          id: doc.id,
-          filename: data.filename,
-          originalName: data.originalName,
-          description: data.description,
-          fileType: data.fileType,
-          fileSize: data.fileSize,
-          storageUrl: data.storageUrl,
-          storagePath: data.storagePath,
-          userId: data.userId,
-          projectId: data.projectId,
-          tenantId: data.tenantId,
-          uploadedAt: data.uploadedAt.toDate(),
-          updatedAt: data.updatedAt.toDate(),
-          tags: data.tags || [],
-          isPublic: data.isPublic || false,
-          downloadCount: data.downloadCount || 0,
-          lastAccessed: data.lastAccessed?.toDate()
-        });
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
+      
+      // Manuell nach uploadedAt sortieren
+      return documents.sort((a, b) => {
+        const dateA = a.uploadedAt instanceof Timestamp ? a.uploadedAt.toDate() : new Date(a.uploadedAt);
+        const dateB = b.uploadedAt instanceof Timestamp ? b.uploadedAt.toDate() : new Date(b.uploadedAt);
+        return dateB.getTime() - dateA.getTime(); // Descending
       });
-
-      return documents;
     } catch (error) {
-      console.error('Error fetching user documents:', error);
+      console.error('Error fetching documents:', error);
       throw new Error('Fehler beim Abrufen der Dokumente');
     }
   }
 
   /**
-   * Gets a single document by ID (with user permission check)
+   * Get documents by mandant (for admin view)
    */
-  async getDocument(documentId: string, userId: string): Promise<DocumentMetadata | null> {
+  static async getDocumentsByMandant(mandantId: string): Promise<Document[]> {
     try {
-      const docRef = doc(db, this.documentsCollection, documentId);
-      const docSnap = await getDocs(query(
-        collection(db, this.documentsCollection),
-        where('__name__', '==', documentId),
-        where('userId', '==', userId)
-      ));
+      // Temporäre Lösung ohne Index - nur nach mandantId filtern
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mandantId', '==', mandantId)
+      );
 
-      if (docSnap.empty) {
-        return null;
-      }
-
-      const documentData = docSnap.docs[0].data();
-      return {
-        id: docSnap.docs[0].id,
-        filename: documentData.filename,
-        originalName: documentData.originalName,
-        description: documentData.description,
-        fileType: documentData.fileType,
-        fileSize: documentData.fileSize,
-        storageUrl: documentData.storageUrl,
-        storagePath: documentData.storagePath,
-        userId: documentData.userId,
-        projectId: documentData.projectId,
-        tenantId: documentData.tenantId,
-        uploadedAt: documentData.uploadedAt.toDate(),
-        updatedAt: documentData.updatedAt.toDate(),
-        tags: documentData.tags || [],
-        isPublic: documentData.isPublic || false,
-        downloadCount: documentData.downloadCount || 0,
-        lastAccessed: documentData.lastAccessed?.toDate()
-      };
-    } catch (error) {
-      console.error('Error fetching document:', error);
-      throw new Error('Fehler beim Abrufen des Dokuments');
-    }
-  }
-
-  /**
-   * Updates document metadata
-   */
-  async updateDocument(
-    documentId: string,
-    userId: string,
-    updates: Partial<Pick<DocumentMetadata, 'description' | 'tags' | 'isPublic'>>
-  ): Promise<void> {
-    try {
-      const docRef = doc(db, this.documentsCollection, documentId);
+      const querySnapshot = await getDocs(q);
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
       
-      // Verify ownership before updating
-      const document = await this.getDocument(documentId, userId);
-      if (!document) {
-        throw new Error('Dokument nicht gefunden oder keine Berechtigung');
-      }
-
-      await updateDoc(docRef, {
-        ...updates,
-        updatedAt: Timestamp.fromDate(new Date())
+      // Manuell nach uploadedAt sortieren
+      return documents.sort((a, b) => {
+        const dateA = a.uploadedAt instanceof Timestamp ? a.uploadedAt.toDate() : new Date(a.uploadedAt);
+        const dateB = b.uploadedAt instanceof Timestamp ? b.uploadedAt.toDate() : new Date(b.uploadedAt);
+        return dateB.getTime() - dateA.getTime(); // Descending
       });
     } catch (error) {
-      console.error('Error updating document:', error);
-      throw new Error('Fehler beim Aktualisieren des Dokuments');
+      console.error('Error fetching documents by mandant:', error);
+      throw new Error('Fehler beim Abrufen der Dokumente');
     }
   }
 
   /**
-   * Deletes a document and its file from storage
+   * Get document by filename in specific folder
    */
-  async deleteDocument(documentId: string, userId: string): Promise<void> {
+  static async getDocumentByFilename(
+    projectId: string, 
+    folder: string, 
+    filename: string
+  ): Promise<Document | null> {
     try {
-      // Get document metadata first
-      const document = await this.getDocument(documentId, userId);
-      if (!document) {
-        throw new Error('Dokument nicht gefunden oder keine Berechtigung');
+      // Temporäre Lösung ohne Index - nur nach Feldern filtern
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('projectId', '==', projectId),
+        where('folder', '==', folder),
+        where('filename', '==', filename)
+      );
+
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return null;
+
+      // Manuell nach version und uploadedAt sortieren
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
+      
+      const sortedDocs = documents.sort((a, b) => {
+        // Erst nach Version sortieren
+        if (a.version !== b.version) {
+          return b.version - a.version; // Descending
+        }
+        // Dann nach uploadedAt
+        const dateA = a.uploadedAt instanceof Timestamp ? a.uploadedAt.toDate() : new Date(a.uploadedAt);
+        const dateB = b.uploadedAt instanceof Timestamp ? b.uploadedAt.toDate() : new Date(b.uploadedAt);
+        return dateB.getTime() - dateA.getTime(); // Descending
+      });
+      
+      return sortedDocs[0];
+    } catch (error) {
+      console.error('Error fetching document by filename:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get document versions
+   */
+  static async getDocumentVersions(
+    projectId: string, 
+    folder: string, 
+    filename: string
+  ): Promise<Document[]> {
+    try {
+      // Temporäre Lösung ohne Index - nur nach Feldern filtern
+      const q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('projectId', '==', projectId),
+        where('folder', '==', folder),
+        where('filename', '==', filename)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
+      
+      // Manuell nach version sortieren
+      return documents.sort((a, b) => b.version - a.version); // Descending
+    } catch (error) {
+      console.error('Error fetching document versions:', error);
+      throw new Error('Fehler beim Abrufen der Dokumentversionen');
+    }
+  }
+
+  /**
+   * Delete a document
+   */
+  static async deleteDocument(documentId: string): Promise<void> {
+    try {
+      const docRef = doc(db, this.COLLECTION_NAME, documentId);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        throw new Error('Dokument nicht gefunden');
       }
 
-      // Delete file from Storage
-      const storageRef = ref(storage, document.storagePath);
+      const documentData = docSnap.data() as Document;
+      
+      // Delete from Firebase Storage
+      const storageRef = ref(storage, documentData.downloadUrl);
       await deleteObject(storageRef);
-
-      // Delete metadata from Firestore
-      const docRef = doc(db, this.documentsCollection, documentId);
+      
+      // Delete from Firestore
       await deleteDoc(docRef);
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -304,48 +279,109 @@ export class DocumentService {
   }
 
   /**
-   * Increments download count and updates last accessed
+   * Create a new folder
    */
-  async recordDownload(documentId: string, userId: string): Promise<void> {
+  static async createFolder(
+    name: string, 
+    projectId: string, 
+    mandantId: string, 
+    createdBy: string
+  ): Promise<DocumentFolder> {
     try {
-      const docRef = doc(db, this.documentsCollection, documentId);
-      
-      // Verify ownership
-      const document = await this.getDocument(documentId, userId);
-      if (!document) {
-        throw new Error('Dokument nicht gefunden oder keine Berechtigung');
-      }
+      const folderData: Omit<DocumentFolder, 'id'> = {
+        name,
+        projectId,
+        mandantId,
+        createdAt: serverTimestamp() as Timestamp,
+        createdBy
+      };
 
-      await updateDoc(docRef, {
-        downloadCount: (document.downloadCount || 0) + 1,
-        lastAccessed: Timestamp.fromDate(new Date()),
-        updatedAt: Timestamp.fromDate(new Date())
-      });
+      const docRef = await addDoc(collection(db, this.FOLDERS_COLLECTION), folderData);
+      
+      return {
+        id: docRef.id,
+        ...folderData
+      };
     } catch (error) {
-      console.error('Error recording download:', error);
-      // Don't throw error for download tracking
+      console.error('Error creating folder:', error);
+      throw new Error('Fehler beim Erstellen des Ordners');
     }
   }
 
   /**
-   * Searches documents by filename, description, or tags
+   * Get folders for a project
    */
-  async searchDocuments(
-    userId: string,
-    searchTerm: string,
-    projectId?: string
-  ): Promise<DocumentMetadata[]> {
+  static async getFoldersByProject(
+    projectId: string, 
+    mandantId: string
+  ): Promise<DocumentFolder[]> {
     try {
-      // Get all user documents and filter client-side for search
-      // In production, you might want to use Algolia or similar for better search
-      const documents = await this.getUserDocuments(userId, projectId, 1000);
-      
-      const searchLower = searchTerm.toLowerCase();
-      return documents.filter(doc => 
-        doc.filename.toLowerCase().includes(searchLower) ||
-        doc.description?.toLowerCase().includes(searchLower) ||
-        doc.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+      const q = query(
+        collection(db, this.FOLDERS_COLLECTION),
+        where('projectId', '==', projectId),
+        where('mandantId', '==', mandantId),
+        orderBy('createdAt', 'desc')
       );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as DocumentFolder[];
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+      throw new Error('Fehler beim Abrufen der Ordner');
+    }
+  }
+
+  /**
+   * Search documents
+   */
+  static async searchDocuments(
+    mandantId: string,
+    searchTerm?: string,
+    projectId?: string,
+    folder?: string,
+    tags?: string[]
+  ): Promise<Document[]> {
+    try {
+      let q = query(
+        collection(db, this.COLLECTION_NAME),
+        where('mandantId', '==', mandantId)
+      );
+
+      if (projectId) {
+        q = query(q, where('projectId', '==', projectId));
+      }
+
+      if (folder) {
+        q = query(q, where('folder', '==', folder));
+      }
+
+      q = query(q, orderBy('uploadedAt', 'desc'));
+
+      const querySnapshot = await getDocs(q);
+      let documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
+
+      // Filter by search term and tags
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        documents = documents.filter(doc => 
+          doc.filename.toLowerCase().includes(term) ||
+          doc.tags?.some(tag => tag.toLowerCase().includes(term))
+        );
+      }
+
+      if (tags && tags.length > 0) {
+        documents = documents.filter(doc => 
+          doc.tags?.some(tag => tags.includes(tag))
+        );
+      }
+
+      return documents;
     } catch (error) {
       console.error('Error searching documents:', error);
       throw new Error('Fehler bei der Dokumentsuche');
@@ -353,41 +389,33 @@ export class DocumentService {
   }
 
   /**
-   * Gets document statistics for a user
+   * Get document statistics
    */
-  async getUserDocumentStats(userId: string): Promise<{
+  static async getDocumentStats(mandantId: string): Promise<{
     totalDocuments: number;
     totalSize: number;
     documentsByType: Record<string, number>;
-    recentUploads: number;
   }> {
     try {
-      const documents = await this.getUserDocuments(userId, undefined, 1000);
+      const documents = await this.getDocumentsByMandant(mandantId);
       
-      const totalSize = documents.reduce((sum, doc) => sum + doc.fileSize, 0);
-      const documentsByType = documents.reduce((acc, doc) => {
-        const type = doc.fileType.split('/')[0] || 'unknown';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentUploads = documents.filter(doc => 
-        doc.uploadedAt > thirtyDaysAgo
-      ).length;
+      const totalDocuments = documents.length;
+      const totalSize = documents.reduce((sum, doc) => sum + (doc.size || 0), 0);
+      
+      const documentsByType: Record<string, number> = {};
+      documents.forEach(doc => {
+        const type = doc.type || 'unknown';
+        documentsByType[type] = (documentsByType[type] || 0) + 1;
+      });
 
       return {
-        totalDocuments: documents.length,
+        totalDocuments,
         totalSize,
-        documentsByType,
-        recentUploads
+        documentsByType
       };
     } catch (error) {
       console.error('Error getting document stats:', error);
-      throw new Error('Fehler beim Abrufen der Dokumentenstatistiken');
+      throw new Error('Fehler beim Abrufen der Dokumentstatistiken');
     }
   }
-}
-
-export default DocumentService.getInstance(); 
+} 

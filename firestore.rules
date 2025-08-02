@@ -13,6 +13,16 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
+    // Helper function to validate mandant data
+    function isValidMandantData() {
+      return request.resource.data.keys().hasAll(['mandantId', 'name', 'typ', 'createdAt']) &&
+             request.resource.data.mandantId is string &&
+             request.resource.data.name is string &&
+             request.resource.data.name.size() > 0 &&
+             request.resource.data.typ in ['firma', 'privat'] &&
+             request.resource.data.createdAt is timestamp;
+    }
+    
     // Helper function to check if user owns the document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
@@ -26,24 +36,42 @@ service cloud.firestore {
 
     // Documents collection - Multi-tenant document management
     match /documents/{documentId} {
-      // Allow read if user owns the document or is admin
+      // Allow read if user belongs to the same mandant or is admin
       allow read: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || isAdmin());
+        (resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId || isAdmin());
       
-      // Allow create if user is authenticated and sets their own userId
-      allow create: if isAuthenticated() && 
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.uploadedAt is timestamp &&
-        request.resource.data.updatedAt is timestamp;
+      // Allow create if user is admin and belongs to the same mandant
+      allow create: if isAuthenticated() && isAdmin() &&
+        request.resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId &&
+        request.resource.data.uploadedAt is timestamp;
       
-      // Allow update if user owns the document or is admin
-      allow update: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || isAdmin()) &&
-        request.resource.data.userId == resource.data.userId; // Prevent changing ownership
+      // Allow update if user is admin and belongs to the same mandant
+      allow update: if isAuthenticated() && isAdmin() &&
+        resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
       
-      // Allow delete if user owns the document or is admin
-      allow delete: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || isAdmin());
+      // Allow delete if user is admin and belongs to the same mandant
+      allow delete: if isAuthenticated() && isAdmin() &&
+        resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
+    }
+
+    // DocumentFolders collection - Folder management
+    match /documentFolders/{folderId} {
+      // Allow read if user belongs to the same mandant or is admin
+      allow read: if isAuthenticated() && 
+        (resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId || isAdmin());
+      
+      // Allow create if user is admin and belongs to the same mandant
+      allow create: if isAuthenticated() && isAdmin() &&
+        request.resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId &&
+        request.resource.data.createdAt is timestamp;
+      
+      // Allow update if user is admin and belongs to the same mandant
+      allow update: if isAuthenticated() && isAdmin() &&
+        resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
+      
+      // Allow delete if user is admin and belongs to the same mandant
+      allow delete: if isAuthenticated() && isAdmin() &&
+        resource.data.mandantId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId;
     }
 
     // Users collection - User profile management
@@ -51,8 +79,8 @@ service cloud.firestore {
       // Allow read if user owns the profile or is admin
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       
-      // Allow create if user is creating their own profile
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Allow create if user is admin (for admin user management)
+      allow create: if isAuthenticated() && isAdmin();
       
       // Allow update if user owns the profile or is admin
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
@@ -87,6 +115,21 @@ service cloud.firestore {
       }
     }
 
+    // Projekte collection - German project management (used by ProjectService)
+    match /projekte/{projectId} {
+      // Allow read if user is authenticated
+      allow read: if isAuthenticated();
+      
+      // Allow create if user is authenticated
+      allow create: if isAuthenticated();
+      
+      // Allow update if user is authenticated
+      allow update: if isAuthenticated();
+      
+      // Allow delete if user is authenticated
+      allow delete: if isAuthenticated();
+    }
+
     // Teams collection - Team management (for future expansion)
     match /teams/{teamId} {
       // Allow read if user is team member or admin
@@ -113,26 +156,80 @@ service cloud.firestore {
       }
     }
 
-    // Tenants collection - Multi-tenant support (for future expansion)
+
+
+
+
+    // Mandanten collection - Tenant management
+    match /mandanten/{mandantId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Gewerke collection - Trade management
+    match /gewerke/{gewerkId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Phasen collection - Phase management
+    match /phasen/{phaseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ProjektGewerke collection - Project trade management
+    match /projektGewerke/{projektGewerkId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ProjektPhasen collection - Project phase management
+    match /projektPhasen/{projektPhaseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Tenants collection with nested projects and phases - Phase 2 Implementation
+    // Ein eingeloggter User darf Projektdaten und Phasen seiner Mandanten lesen
     match /tenants/{tenantId} {
       // Allow read if user belongs to tenant or is admin
       allow read: if isAuthenticated() && 
         (exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)) || isAdmin());
       
-      // Allow create only for admins
-      allow create: if isAdmin();
+      // Allow create/update/delete only for admins
+      allow create, update, delete: if isAdmin();
       
-      // Allow update only for admins
-      allow update: if isAdmin();
-      
-      // Allow delete only for admins
-      allow delete: if isAdmin();
-      
-      // Tenant users subcollection
-      match /users/{userId} {
+      // Nested projects collection
+      match /projects/{projectId} {
+        // Allow read if user is project member or admin
         allow read: if isAuthenticated() && 
-          (exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)) || isAdmin());
-        allow write: if isAdmin();
+          (exists(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)/members/$(request.auth.uid)) || isAdmin());
+        
+        // Allow create/update/delete if user is project owner or admin
+        allow create, update, delete: if isAuthenticated() && 
+          (resource.data.ownerId == request.auth.uid || isAdmin());
+        
+        // Nested phases collection - Phasen für Projekte
+        match /phasen/{phaseId} {
+          // Allow read if user is project member or admin
+          allow read: if isAuthenticated() && 
+            (exists(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)/members/$(request.auth.uid)) || isAdmin());
+          
+          // Allow create/update/delete if user is project owner or admin
+          allow create, update, delete: if isAuthenticated() && 
+            (get(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin());
+          
+          // Nested trades collection - Gewerke innerhalb von Phasen
+          match /trades/{tradeId} {
+            // Allow read if user is project member or admin
+            allow read: if isAuthenticated() && 
+              (exists(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)/members/$(request.auth.uid)) || isAdmin());
+            
+            // Allow create/update/delete if user is project owner or admin
+            allow create, update, delete: if isAuthenticated() && 
+              (get(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin());
+          }
+        }
       }
     }
 

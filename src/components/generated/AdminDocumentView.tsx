@@ -11,6 +11,8 @@ interface AdminDocumentViewProps {
   documents: Document[];
   onDocumentsChange: (documents: Document[]) => void;
   currentUser: User;
+  onNavigateToUserManagement?: () => void;
+  onDocumentUploadComplete?: (document: DocumentMetadata) => void;
 }
 
 // Document categories/folders
@@ -26,7 +28,8 @@ const AdminDocumentView: React.FC<AdminDocumentViewProps> = ({
   projects,
   documents,
   onDocumentsChange,
-  currentUser
+  currentUser,
+  onDocumentUploadComplete
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'upload' | 'clients'>('overview');
   const [selectedClient, setSelectedClient] = useState<string>('all');
@@ -95,6 +98,10 @@ const AdminDocumentView: React.FC<AdminDocumentViewProps> = ({
     setTimeout(() => {
       setShowUploadSuccess(false);
     }, 3000);
+
+    if (onDocumentUploadComplete) {
+      onDocumentUploadComplete(document);
+    }
   };
 
   const handleUploadError = (error: string) => {

@@ -1,4 +1,6 @@
 import { User } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 // User data interface for the construction portal
 export interface UserData {
@@ -21,20 +23,57 @@ export class UserService {
    * In a real application, this would fetch additional user data from Firestore
    */
   static async getUserData(user: User): Promise<UserData> {
-    // For now, return basic user data
-    // In a real app, you would fetch additional data from Firestore
-    return {
-      uid: user.uid,
-      email: user.email || '',
-      displayName: user.displayName || undefined,
-      role: 'customer', // Default role, should be fetched from database
-      tenantId: undefined, // Should be fetched from database
-      projects: [], // Should be fetched from database
-      createdAt: new Date(user.metadata.creationTime || Date.now()),
-      lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
-      twoFactorEnabled: false, // 2FA ist standardmäßig deaktiviert
-      twoFactorCompleted: true // 2FA ist abgeschlossen (da deaktiviert)
-    };
+    try {
+      // Try to fetch user data from Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: userData.displayName || user.displayName || undefined,
+          role: userData.role || 'customer', // Use role from Firestore
+          tenantId: userData.tenantId || undefined,
+          projects: userData.projects || [],
+          createdAt: userData.createdAt?.toDate() || new Date(user.metadata.creationTime || Date.now()),
+          lastLoginAt: userData.lastLoginAt?.toDate() || new Date(user.metadata.lastSignInTime || Date.now()),
+          twoFactorEnabled: userData.twoFactorEnabled || false,
+          twoFactorCompleted: userData.twoFactorCompleted !== false // Default to true if not set
+        };
+      }
+      
+      // If no Firestore document exists, return basic user data
+      console.log(`No Firestore document found for user ${user.uid}, using default data`);
+      return {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || undefined,
+        role: 'customer', // Default role for new users
+        tenantId: undefined,
+        projects: [],
+        createdAt: new Date(user.metadata.creationTime || Date.now()),
+        lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
+        twoFactorEnabled: false,
+        twoFactorCompleted: true
+      };
+    } catch (error) {
+      console.error('Error fetching user data from Firestore:', error);
+      // Fallback to basic user data if Firestore query fails
+      return {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || undefined,
+        role: 'customer', // Default role
+        tenantId: undefined,
+        projects: [],
+        createdAt: new Date(user.metadata.creationTime || Date.now()),
+        lastLoginAt: new Date(user.metadata.lastSignInTime || Date.now()),
+        twoFactorEnabled: false,
+        twoFactorCompleted: true
+      };
+    }
   }
 
   /**
@@ -88,9 +127,22 @@ export class UserService {
    * Get user role and permissions
    */
   static async getUserRole(userId: string): Promise<'admin' | 'customer' | 'employee'> {
-    // In a real application, this would fetch user role from database
-    // For now, return default role
-    return 'customer';
+    try {
+      // Fetch user role from Firestore
+      const userDocRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.role || 'customer';
+      }
+      
+      // Default role if no document exists
+      return 'customer';
+    } catch (error) {
+      console.error('Error fetching user role from Firestore:', error);
+      return 'customer';
+    }
   }
 
   /**

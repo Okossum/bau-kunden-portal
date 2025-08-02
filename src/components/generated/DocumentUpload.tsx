@@ -2,12 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, X, File, AlertCircle, CheckCircle, Loader2, Folder } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import DocumentService, { DocumentMetadata, UploadProgress } from '../../services/documentService';
+import { DocumentService, Document } from '../../services/documentService';
 
 interface DocumentUploadProps {
   userId: string;
   projectId?: string;
-  onUploadComplete: (document: DocumentMetadata) => void;
+  onUploadComplete: (document: Document) => void;
   onError: (error: string) => void;
   maxFileSize?: number; // in bytes
   allowedFileTypes?: string[];
@@ -31,7 +31,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -81,7 +81,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
 
     setSelectedFile(file);
-    setUploadProgress(null);
+    setUploadProgress(0);
     
     // Auto-suggest folder based on file type
     const suggestedFolder = getSuggestedFolder(file.name);
@@ -119,23 +119,29 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   // Upload file
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !projectId) return;
 
     setUploading(true);
-    setUploadProgress({ progress: 0, bytesTransferred: 0, totalBytes: selectedFile.size });
+    setUploadProgress(0);
 
     try {
       const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
       
-      const document = await DocumentService.uploadDocument(
-        selectedFile,
-        userId,
-        description,
-        projectId,
-        tagsArray,
-        (progress) => {
-          setUploadProgress(progress);
+      const uploadData = {
+        file: selectedFile,
+        projectId: projectId,
+        folder: selectedFolder || 'allgemein',
+        tags: tagsArray,
+        meta: {
+          description,
+          uploadedVia: 'DocumentUpload'
         }
+      };
+
+      const document = await DocumentService.uploadDocument(
+        uploadData,
+        'default-tenant', // mandantId
+        userId // uploadedBy
       );
 
       onUploadComplete(document);
@@ -145,7 +151,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setDescription('');
       setTags('');
       setSelectedFolder('');
-      setUploadProgress(null);
+      setUploadProgress(0);
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Fehler beim Hochladen');
     } finally {
@@ -156,7 +162,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   // Remove selected file
   const handleRemoveFile = () => {
     setSelectedFile(null);
-    setUploadProgress(null);
+    setUploadProgress(0);
     setSelectedFolder('');
   };
 
@@ -334,13 +340,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-slate-600">
                   <span>Hochladen...</span>
-                  <span>{uploadProgress.progress}%</span>
+                  <span>{uploadProgress}%</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <motion.div
                     className="bg-blue-600 h-2 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${uploadProgress.progress}%` }}
+                    animate={{ width: `${uploadProgress}%` }}
                     transition={{ duration: 0.3 }}
                   />
                 </div>

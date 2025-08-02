@@ -33,7 +33,22 @@ service firebase.storage {
              firestore.exists(/databases/(default)/documents/projects/$(projectId)/members/$(request.auth.uid));
     }
 
-    // Documents folder - Multi-tenant document storage
+    // Mandanten folder - Multi-tenant document storage
+    match /mandanten/{mandantId}/{allPaths=**} {
+      // Allow read if user belongs to the same mandant or is admin
+      allow read: if isAuthenticated() && 
+        (mandantId == firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.tenantId || isAdmin());
+      
+      // Allow write if user is admin and belongs to the same mandant
+      allow write: if isAuthenticated() && isAdmin() &&
+        mandantId == firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.tenantId &&
+        // Validate file size (50MB max)
+        request.resource.size < 50 * 1024 * 1024 &&
+        // Validate file type
+        request.resource.contentType.matches('image/.*|application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document|application/vnd.ms-excel|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|application/vnd.ms-powerpoint|application/vnd.openxmlformats-officedocument.presentationml.presentation|text/.*|application/zip|application/x-rar-compressed|video/.*|audio/.*');
+    }
+
+    // Documents folder - Legacy document storage (for backward compatibility)
     match /documents/{userId}/{allPaths=**} {
       // Allow read if user owns the file, has project access, or is admin
       allow read: if isAuthenticated() && 

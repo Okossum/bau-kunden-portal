@@ -1,0 +1,91 @@
+[
+  {
+    "name": "1. Projektvorbereitung",
+    "gewerke": [
+      "Kostenrahmen und Budget festlegen",
+      "Finanzierungsplan erstellen",
+      "Finanzierungsangebote einholen und vergleichen",
+      "Darlehensvertrag abschließen",
+      "Grundstück auswählen und prüfen (Grundbuch, Altlasten, Baulasten)",
+      "Notartermin organisieren und Kaufvertrag beurkunden",
+      "Auflassungsvormerkung im Grundbuch eintragen lassen",
+      "Bauherrenversicherungen abschließen (Haftpflicht, Bauleistungsversicherung)"
+    ]
+  },
+  {
+    "name": "2. Planung & Genehmigung",
+    "gewerke": [
+      "Architekten/Planer beauftragen",
+      "Bedarfsplanung (Größe, Nutzung, Raumaufteilung)",
+      "Vermessung und Lageplan erstellen lassen",
+      "Bodengutachten beauftragen",
+      "Entwurfsplanung erstellen",
+      "Bauantrag vorbereiten und einreichen",
+      "Statische Berechnung und Wärmeschutznachweis beauftragen",
+      "Energieberater für KfW-Förderung einbinden",
+      "Baugenehmigung abwarten und prüfen"
+    ]
+  },
+  {
+    "name": "3. Ausschreibung & Vergabe",
+    "gewerke": [
+      "Leistungsverzeichnisse für Gewerke erstellen",
+      "Angebote einholen und vergleichen",
+      "Verträge mit Gewerken abschließen",
+      "Bauleiter benennen",
+      "Bauzeitenplan erstellen",
+      "Baubeginn bei Bauamt anzeigen"
+    ]
+  },
+  {
+    "name": "4. Rohbau",
+    "gewerke": [
+      "Erdarbeiten (Aushub, Bodenplatte)",
+      "Fundament erstellen",
+      "Keller- oder Bodenplatte herstellen",
+      "Rohbau: Mauerwerksbau / Betonbau",
+      "Decken und Treppen einbauen",
+      "Dachstuhl errichten",
+      "Dacheindeckung und Abdichtung",
+      "Fenster und Außentüren einbauen"
+    ]
+  },
+  {
+    "name": "5. Technische Gebäudeausrüstung (TGA)",
+    "gewerke": [
+      "Elektroinstallation (Leitungen, Dosen, Verteilung)",
+      "Sanitärinstallation (Wasser, Abwasser)",
+      "Heizung installieren (z. B. Wärmepumpe, Gas, Fußbodenheizung)",
+      "Lüftungsanlage einbauen",
+      "Smart Home / Netzwerktechnik vorbereiten"
+    ]
+  },
+  {
+    "name": "6. Innenausbau",
+    "gewerke": [
+      "Innenputz auftragen",
+      "Estrich einbringen und austrocknen lassen",
+      "Trockenbau (Wände, Decken, Dämmung)",
+      "Maler- und Tapezierarbeiten",
+      "Fliesenarbeiten (Bad, Küche, Bodenbeläge)",
+      "Türen montieren (Innenbereich)",
+      "Bodenbeläge verlegen (Parkett, Vinyl, Teppich)",
+      "Sanitärobjekte und Elektromontage durchführen"
+    ]
+  },
+  {
+    "name": "7. Außenanlagen & Abschluss",
+    "gewerke": [
+      "Fassade fertigstellen (Putz, Dämmung, Verkleidung)",
+      "Terrasse, Wege und Zufahrten pflastern",
+      "Garten anlegen (Rasen, Bepflanzung)",
+      "Zäune, Einfriedungen aufstellen",
+      "Bauendreinigung innen & außen",
+      "Abnahme mit Handwerkern / Bauleitung durchführen",
+      "Restarbeiten / Mängel beheben lassen",
+      "Dokumentation und Übergabe",
+      "Haus bei Versorgern anmelden (Strom, Wasser, Abfall)",
+      "Einzug vorbereiten"
+    ]
+  }
+]

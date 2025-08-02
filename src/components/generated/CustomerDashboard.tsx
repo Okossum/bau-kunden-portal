@@ -1,34 +1,47 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import SidebarNavigation from './SidebarNavigation';
 import ProjectOverviewSection from './ProjectOverviewSection';
 import NotificationPanel from './NotificationPanel';
 import KPIsPanel from './KPIsPanel';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface CustomerDashboardProps {
-  onNavigateToDocuments: () => void;
+  onNavigateToDocuments?: () => void;
+  onNavigateToDocumentManagement?: () => void;
+  onNavigateToUserManagement?: () => void;
+  onNavigateToProjectManagement?: () => void;
+  onNavigateToProjectProgress?: (projectId: string) => void;
 }
 
-const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onNavigateToDocuments }) => {
+const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ 
+  onNavigateToDocuments, 
+  onNavigateToDocumentManagement,
+  onNavigateToUserManagement,
+  onNavigateToProjectManagement,
+  onNavigateToProjectProgress
+}) => {
   const { currentUser, userData, logout } = useAuth();
-      return <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar Navigation */}
-      <SidebarNavigation onNavigateToDocuments={onNavigateToDocuments} />
-      
+  
+  return (
+    <div className="min-h-screen bg-slate-50">
       {/* Main Content Area */}
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Welcome Header */}
-          <motion.header initial={{
-          opacity: 0,
-          y: -20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8">
+          <motion.header
+            initial={{
+              opacity: 0,
+              y: -20
+            }}
+            animate={{
+              opacity: 1,
+              y: 0
+            }}
+            transition={{
+              duration: 0.5
+            }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:p-8"
+          >
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
               Willkommen, {userData?.displayName || currentUser?.email?.split('@')[0] || 'Benutzer'}
             </h1>
@@ -41,7 +54,11 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onNavigateToDocum
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Left Column - Projects and KPIs */}
             <div className="xl:col-span-2 space-y-6 lg:space-y-8">
-              <ProjectOverviewSection />
+              <ProjectOverviewSection 
+                onNavigateToDashboard={undefined} 
+                onNavigateToProjectManagement={onNavigateToProjectManagement}
+                onNavigateToProjectProgress={onNavigateToProjectProgress}
+              />
               <KPIsPanel />
             </div>
             
@@ -52,6 +69,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ onNavigateToDocum
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default CustomerDashboard;

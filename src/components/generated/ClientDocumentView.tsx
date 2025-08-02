@@ -7,6 +7,7 @@ interface ClientDocumentViewProps {
   projects: Project[];
   documents: Document[];
   currentUser: User;
+  onNavigateToUserManagement?: () => void;
 }
 
 // Document categories/folders
