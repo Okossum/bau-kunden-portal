@@ -232,3 +232,102 @@ export interface UpdateProjektPhaseRequest {
   fortschritt?: number;
   notizen?: string;
 }
+
+// Phase 3: Bauvorhabenarten und Eigenleistungs-Tracking
+export interface Bauvorhabenart {
+  id: string;
+  name: string;
+  beschreibung?: string;
+  kategorie?: string;
+  status?: 'aktiv' | 'inaktiv';
+  standardDauer?: number; // in Tagen
+  phasen: string[]; // Phase-IDs
+  metadata?: {
+    erstelltFuerMandant?: string;
+    version?: string;
+    tags?: string[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy: string;
+}
+
+export interface CreateBauvorhabenartRequest {
+  name: string;
+  beschreibung?: string;
+  kategorie?: string;
+  status?: 'aktiv' | 'inaktiv';
+  standardDauer?: number;
+  phasen?: string[];
+  metadata?: {
+    erstelltFuerMandant?: string;
+    version?: string;
+    tags?: string[];
+  };
+}
+
+export interface UpdateBauvorhabenartRequest {
+  name?: string;
+  beschreibung?: string;
+  kategorie?: string;
+  status?: 'aktiv' | 'inaktiv';
+  standardDauer?: number;
+  phasen?: string[];
+  metadata?: {
+    erstelltFuerMandant?: string;
+    version?: string;
+    tags?: string[];
+  };
+}
+
+// Erweiterte Gewerk-Interface mit Eigenleistungs-Tracking
+export interface GewerkMitEigenleistung extends Gewerk {
+  eigenleistung: boolean;
+  eigenleistungGeaendertAm?: Date;
+  eigenleistungGeaendertVon?: string;
+  eigenleistungHistorie?: {
+    datum: Date;
+    von: string;
+    wert: boolean;
+    kommentar?: string;
+  }[];
+}
+
+// Erweiterte Trade-Interface mit Eigenleistungs-Tracking
+export interface TradeWithEigenleistung extends TradeWithProgress {
+  eigenleistung: boolean;
+  eigenleistungGeaendertAm?: Date;
+  eigenleistungGeaendertVon?: string;
+  eigenleistungHistorie?: {
+    datum: Date;
+    von: string;
+    wert: boolean;
+    kommentar?: string;
+  }[];
+}
+
+// Projekt-Bauvorhabenart Zuordnung
+export interface ProjektBauvorhabenart {
+  id: string;
+  projektId: string;
+  bauvorhabenartId: string;
+  zugeordnetAm: Date;
+  zugeordnetVon: string;
+  status: 'aktiv' | 'inaktiv';
+  notizen?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateProjektBauvorhabenartRequest {
+  projektId: string;
+  bauvorhabenartId: string;
+  status?: 'aktiv' | 'inaktiv';
+  notizen?: string;
+}
+
+export interface UpdateProjektBauvorhabenartRequest {
+  status?: 'aktiv' | 'inaktiv';
+  notizen?: string;
+}

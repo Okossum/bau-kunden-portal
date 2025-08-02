@@ -19,6 +19,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import ProjectService, { Project, ProjectFormData, ProjectAddress, Client } from '../../services/projectService';
 import { UserManagementService } from '../../services/userManagementService';
+import { bauvorhabenartService } from '../../services/bauvorhabenartService';
+import { Bauvorhabenart } from '../../settings/types';
 
 interface ProjectFormProps {
   project?: Project;
@@ -55,6 +57,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const [success, setSuccess] = useState('');
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [availableBauvorhabenarten, setAvailableBauvorhabenarten] = useState<Bauvorhabenart[]>([]);
   const [customerType, setCustomerType] = useState<'private' | 'commercial'>('private');
 
   // Form state
@@ -62,6 +65,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     projectName: '',
     projectId: '',
     constructionTypes: [],
+    bauvorhabenarten: [],
     status: 'geplant',
     description: '',
     clientId: '',
@@ -105,6 +109,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         projectName: project.projectName,
         projectId: project.projectId,
         constructionTypes: project.constructionTypes,
+        bauvorhabenarten: project.bauvorhabenarten || [],
         status: project.status,
         description: project.description || '',
         clientId: project.clientId,
@@ -125,11 +130,17 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       const users = await UserManagementService.getAllUsers();
       const activeUsers = users?.filter(user => user.status === 'Aktiv') || [];
       setAvailableUsers(activeUsers);
+
+      // Load bauvorhabenarten for the current tenant
+      const tenantId = currentUser?.tenantId || 'default-tenant';
+      const bauvorhabenarten = await bauvorhabenartService.getBauvorhabenartenByTenant(tenantId);
+      setAvailableBauvorhabenarten(bauvorhabenarten);
     } catch (error) {
       console.error('Error loading initial data:', error);
       // Ensure arrays are always defined even on error
       setAvailableUsers([]);
       setAvailableClients([]);
+      setAvailableBauvorhabenarten([]);
     }
   };
 
@@ -296,6 +307,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   };
 
+  const handleBauvorhabenartToggle = (bauvorhabenartId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      bauvorhabenarten: prev.bauvorhabenarten.includes(bauvorhabenartId)
+        ? prev.bauvorhabenarten.filter(id => id !== bauvorhabenartId)
+        : [...prev.bauvorhabenarten, bauvorhabenartId]
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -330,6 +350,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         projectName: formData.projectName,
         projectId: formData.projectId,
         constructionTypes: formData.constructionTypes,
+        bauvorhabenarten: formData.bauvorhabenarten,
         status: formData.status,
         description: formData.description,
         tenantId: userData.tenantId || currentUser.uid,
@@ -437,6 +458,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                       projectName: '',
                       projectId: '',
                       constructionTypes: [],
+                      bauvorhabenarten: [],
                       status: 'geplant',
                       description: '',
                       clientId: '',
@@ -544,6 +566,46 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             </div>
             {errors.constructionTypes && (
               <p className="mt-1 text-sm text-red-600">{errors.constructionTypes}</p>
+            )}
+          </div>
+
+          {/* Bauvorhabenarten */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Bauvorhabenarten (Mehrfachauswahl)
+            </label>
+            {availableBauvorhabenarten.length === 0 ? (
+              <div className="p-4 border border-slate-300 rounded-lg bg-slate-50">
+                <p className="text-sm text-slate-600">
+                  Keine Bauvorhabenarten verfügbar. Erstellen Sie zuerst Bauvorhabenarten in der Bauvorhabenarten-Verwaltung.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {availableBauvorhabenarten.map((bauvorhabenart) => (
+                  <label
+                    key={bauvorhabenart.id}
+                    className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      formData.bauvorhabenarten.includes(bauvorhabenart.id)
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.bauvorhabenarten.includes(bauvorhabenart.id)}
+                      onChange={() => handleBauvorhabenartToggle(bauvorhabenart.id)}
+                      className="w-4 h-4 text-green-600 border-slate-300 rounded focus:ring-green-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium">{bauvorhabenart.name}</span>
+                      {bauvorhabenart.kategorie && (
+                        <div className="text-xs text-slate-500">{bauvorhabenart.kategorie}</div>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
             )}
           </div>
 

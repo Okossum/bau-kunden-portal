@@ -177,6 +177,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Bauvorhabenarten collection - Mandantenspezifische Bauvorhabenarten
+    // Diese Regeln sind für die flache Collection (falls noch verwendet)
+    match /bauvorhabenarten/{bauvorhabenartId} {
+      // Allow read if user belongs to tenant or is admin
+      allow read: if isAuthenticated() && 
+        (exists(/databases/$(database)/documents/tenants/$(request.auth.uid)) || isAdmin());
+      
+      // Allow create/update/delete if user belongs to tenant or is admin
+      allow create, update, delete: if isAuthenticated() && 
+        (exists(/databases/$(database)/documents/tenants/$(request.auth.uid)) || isAdmin());
+    }
+
     // ProjektGewerke collection - Project trade management
     match /projektGewerke/{projektGewerkId} {
       allow read: if isAuthenticated();
@@ -230,6 +242,17 @@ service cloud.firestore {
               (get(/databases/$(database)/documents/tenants/$(tenantId)/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin());
           }
         }
+      }
+      
+      // Nested bauvorhabenarten collection - Bauvorhabenarten für Mandanten
+      match /bauvorhabenarten/{bauvorhabenartId} {
+        // Allow read if user belongs to tenant or is admin
+        allow read: if isAuthenticated() && 
+          (exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)) || isAdmin());
+        
+        // Allow create/update/delete if user belongs to tenant or is admin
+        allow create, update, delete: if isAuthenticated() && 
+          (exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)) || isAdmin());
       }
     }
 

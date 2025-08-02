@@ -20,12 +20,14 @@ import AppLayout from './components/generated/AppLayout';
 import MandantManagementPage from './components/generated/MandantManagementPage';
 import GewerkManagementPage from './components/generated/GewerkManagementPage';
 import PhaseManagementPage from './components/generated/PhaseManagementPage';
+import BauvorhabenartManagementPage from './components/generated/BauvorhabenartManagementPage';
+import EigenleistungReportPage from './components/generated/EigenleistungReportPage';
 
 let theme: Theme = 'light';
 
 function AppContent() {
   const { currentUser, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'document-debug' | 'simple-debug' | 'test-debug' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management' | 'phase-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'document-debug' | 'simple-debug' | 'test-debug' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management' | 'phase-management' | 'bauvorhabenart-management' | 'eigenleistung-report'>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAdminSetup, setShowAdminSetup] = useState(false);
 
@@ -64,39 +66,50 @@ function AppContent() {
     );
   }
 
-  // If user is authenticated, show appropriate view
-  if (currentUser) {
-    const handleNavigateToDashboard = () => setCurrentView('dashboard');
-    const handleNavigateToDocuments = () => setCurrentView('documents');
-    const handleNavigateToDocumentManagement = () => setCurrentView('document-management');
+  // Navigation handlers
+  const handleNavigateToDashboard = () => setCurrentView('dashboard');
+  const handleNavigateToDocuments = () => setCurrentView('documents');
+  const handleNavigateToDocumentManagement = () => setCurrentView('document-management');
   const handleNavigateToDocumentDebug = () => setCurrentView('document-debug');
   const handleNavigateToSimpleDebug = () => setCurrentView('simple-debug');
   const handleNavigateToTestDebug = () => setCurrentView('test-debug');
-    const handleNavigateToUserManagement = () => setCurrentView('user-management');
-    const handleNavigateToProjectManagement = () => setCurrentView('project-management');
-    const handleNavigateToMandantManagement = () => setCurrentView('mandant-management');
-    const handleNavigateToGewerkManagement = () => setCurrentView('gewerk-management');
+  const handleNavigateToUserManagement = () => setCurrentView('user-management');
+  const handleNavigateToProjectManagement = () => setCurrentView('project-management');
+  const handleNavigateToMandantManagement = () => setCurrentView('mandant-management');
+  const handleNavigateToGewerkManagement = () => setCurrentView('gewerk-management');
   const handleNavigateToPhaseManagement = () => setCurrentView('phase-management');
-    const handleNavigateToProjectProgress = (projectId: string) => {
-      setSelectedProjectId(projectId);
-      setCurrentView('project-progress');
-    };
+  const handleNavigateToBauvorhabenartManagement = () => setCurrentView('bauvorhabenart-management');
+  const handleNavigateToEigenleistungReport = () => setCurrentView('eigenleistung-report');
+  const handleNavigateToProjectProgress = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setCurrentView('project-progress');
+  };
+
+  // Helper function to get common navigation props
+  const getCommonNavigationProps = () => ({
+    onNavigateToDashboard: handleNavigateToDashboard,
+    onNavigateToDocuments: handleNavigateToDocuments,
+    onNavigateToDocumentManagement: handleNavigateToDocumentManagement,
+    onNavigateToDocumentDebug: handleNavigateToDocumentDebug,
+    onNavigateToSimpleDebug: handleNavigateToSimpleDebug,
+    onNavigateToTestDebug: handleNavigateToTestDebug,
+    onNavigateToUserManagement: handleNavigateToUserManagement,
+    onNavigateToProjectManagement: handleNavigateToProjectManagement,
+    onNavigateToMandantManagement: handleNavigateToMandantManagement,
+    onNavigateToGewerkManagement: handleNavigateToGewerkManagement,
+    onNavigateToPhaseManagement: handleNavigateToPhaseManagement,
+    onNavigateToBauvorhabenartManagement: handleNavigateToBauvorhabenartManagement,
+    onNavigateToEigenleistungReport: handleNavigateToEigenleistungReport
+  });
+
+  // If user is authenticated, show appropriate view
+  if (currentUser) {
 
     switch (currentView) {
       case 'dashboard':
         return (
           <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
+            {...getCommonNavigationProps()}
           >
             <CustomerDashboard
               onNavigateToDocuments={handleNavigateToDocuments}
@@ -109,19 +122,7 @@ function AppContent() {
         );
       case 'documents':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <DocumentPortal
               onNavigateToDashboard={handleNavigateToDashboard}
             />
@@ -129,19 +130,7 @@ function AppContent() {
         );
       case 'document-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <DocumentManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
               onNavigateToProjectManagement={handleNavigateToProjectManagement}
@@ -150,74 +139,26 @@ function AppContent() {
         );
       case 'document-debug':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <DocumentManagementDebug />
           </AppLayout>
         );
       case 'simple-debug':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <SimpleDebug />
           </AppLayout>
         );
       case 'test-debug':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <TestDebug />
           </AppLayout>
         );
       case 'user-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
-                        <UserManagementPage
+          <AppLayout {...getCommonNavigationProps()}>
+            <UserManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
               onNavigateToDocuments={handleNavigateToDocuments}
               onNavigateToProjectManagement={handleNavigateToProjectManagement}
@@ -226,19 +167,7 @@ function AppContent() {
         );
       case 'project-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <ProjectManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
               onNavigateToUserManagement={handleNavigateToUserManagement}
@@ -248,19 +177,7 @@ function AppContent() {
         );
       case 'project-progress':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <ProjectProgressPage
               projectId={selectedProjectId}
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -270,19 +187,7 @@ function AppContent() {
         );
       case 'mandant-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <MandantManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
             />
@@ -290,19 +195,7 @@ function AppContent() {
         );
       case 'gewerk-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <GewerkManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
             />
@@ -310,39 +203,27 @@ function AppContent() {
         );
       case 'phase-management':
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <PhaseManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
             />
           </AppLayout>
         );
+      case 'bauvorhabenart-management':
+        return (
+          <AppLayout {...getCommonNavigationProps()}>
+            <BauvorhabenartManagementPage />
+          </AppLayout>
+        );
+      case 'eigenleistung-report':
+        return (
+          <AppLayout {...getCommonNavigationProps()}>
+            <EigenleistungReportPage />
+          </AppLayout>
+        );
       default:
         return (
-          <AppLayout
-            onNavigateToDashboard={handleNavigateToDashboard}
-            onNavigateToDocuments={handleNavigateToDocuments}
-            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
-            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
-            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
-            onNavigateToTestDebug={handleNavigateToTestDebug}
-            onNavigateToUserManagement={handleNavigateToUserManagement}
-            onNavigateToProjectManagement={handleNavigateToProjectManagement}
-            onNavigateToMandantManagement={handleNavigateToMandantManagement}
-            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
-            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
-          >
+          <AppLayout {...getCommonNavigationProps()}>
             <CustomerDashboard
               onNavigateToDocuments={handleNavigateToDocuments}
               onNavigateToUserManagement={handleNavigateToUserManagement}

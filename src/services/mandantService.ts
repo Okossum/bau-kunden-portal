@@ -54,7 +54,9 @@ export class MandantService {
       
       const createdMandant: Mandant = {
         ...mandantData,
-        createdAt: mandantData.createdAt.toDate()
+        createdAt: mandantData.createdAt.toDate(),
+        adresse: mandantData.adresse || undefined,
+        firmenDaten: mandantData.firmenDaten || undefined
       };
 
       console.log('MandantService: Mandant created successfully:', createdMandant);
@@ -97,6 +99,25 @@ export class MandantService {
     } catch (error) {
       console.error('MandantService: Error fetching mandanten:', error);
       throw new Error('Fehler beim Laden der Mandanten');
+    }
+  }
+
+  /**
+   * Get active mandanten only (client-side filtering to avoid index issues)
+   */
+  async getActiveMandanten(): Promise<Mandant[]> {
+    try {
+      console.log('MandantService: Fetching active mandanten...');
+
+      // Get all mandanten and filter client-side to avoid index issues
+      const allMandanten = await this.getAllMandanten();
+      const activeMandanten = allMandanten.filter(mandant => mandant.aktive !== false);
+
+      console.log('MandantService: Retrieved active mandanten:', activeMandanten.length);
+      return activeMandanten;
+    } catch (error) {
+      console.error('MandantService: Error fetching active mandanten:', error);
+      throw new Error('Fehler beim Laden der aktiven Mandanten');
     }
   }
 
@@ -176,42 +197,6 @@ export class MandantService {
   }
 
   /**
-   * Get active mandanten only
-   */
-  async getActiveMandanten(): Promise<Mandant[]> {
-    try {
-      console.log('MandantService: Fetching active mandanten...');
-
-      const q = query(
-        collection(db, this.mandantenCollection),
-        where('aktive', '==', true),
-        orderBy('createdAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-
-      const mandanten: Mandant[] = [];
-      querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
-        const data = doc.data();
-        mandanten.push({
-          mandantId: data.mandantId,
-          name: data.name,
-          typ: data.typ,
-          adresse: data.adresse,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          firmenDaten: data.firmenDaten,
-          aktive: data.aktive !== undefined ? data.aktive : true
-        });
-      });
-
-      console.log('MandantService: Retrieved active mandanten:', mandanten.length);
-      return mandanten;
-    } catch (error) {
-      console.error('MandantService: Error fetching active mandanten:', error);
-      throw new Error('Fehler beim Laden der aktiven Mandanten');
-    }
-  }
-
-  /**
    * Update mandant
    */
   async updateMandant(mandantId: string, data: UpdateMandantRequest): Promise<void> {
@@ -229,7 +214,7 @@ export class MandantService {
       }
 
       const docRef = querySnapshot.docs[0].ref;
-      await updateDoc(docRef, data);
+      await updateDoc(docRef, data as any);
 
       console.log('MandantService: Mandant updated successfully');
     } catch (error) {

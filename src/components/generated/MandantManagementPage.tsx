@@ -52,7 +52,7 @@ const MandantManagementPage: React.FC<MandantManagementPageProps> = ({
     setError(null);
     
     try {
-      const data = await mandantService.getAllMandanten();
+      const data = await mandantService.getActiveMandanten();
       setMandanten(data);
     } catch (err) {
       console.error('Error loading mandanten:', err);

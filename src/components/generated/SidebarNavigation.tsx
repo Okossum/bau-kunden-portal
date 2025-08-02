@@ -11,7 +11,8 @@ import {
   Bug,
   Building,
   Wrench,
-  Calendar
+  Calendar,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -35,6 +36,8 @@ interface SidebarNavigationProps {
   onNavigateToMandantManagement?: () => void;
   onNavigateToGewerkManagement?: () => void;
   onNavigateToPhaseManagement?: () => void;
+  onNavigateToBauvorhabenartManagement?: () => void;
+  onNavigateToEigenleistungReport?: () => void;
 }
 
 const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
@@ -48,7 +51,9 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onNavigateToProjectManagement,
   onNavigateToMandantManagement,
   onNavigateToGewerkManagement,
-  onNavigateToPhaseManagement
+  onNavigateToPhaseManagement,
+  onNavigateToBauvorhabenartManagement,
+  onNavigateToEigenleistungReport
 }) => {
   const { currentUser, userData, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -126,6 +131,20 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       label: 'Phasen-Verwaltung',
       icon: <Calendar className="w-5 h-5" />,
       onClick: onNavigateToPhaseManagement,
+      adminOnly: true
+    },
+    {
+      id: 'bauvorhabenart-management',
+      label: 'Bauvorhabenarten',
+      icon: <Building className="w-5 h-5" />,
+      onClick: onNavigateToBauvorhabenartManagement,
+      adminOnly: true
+    },
+    {
+      id: 'eigenleistung-report',
+      label: 'Eigenleistungs-Report',
+      icon: <BarChart3 className="w-5 h-5" />,
+      onClick: onNavigateToEigenleistungReport,
       adminOnly: true
     }
   ];

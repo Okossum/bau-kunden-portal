@@ -13,12 +13,18 @@ import {
   User,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  History,
+  Info,
+  TrendingUp,
+  BarChart3,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { phaseService } from '../../services/phaseService';
 import { PhaseWithTrades } from '../../services/phaseService';
 import ProjectService, { Project } from '../../services/projectService';
+import { eigenleistungService } from '../../services/eigenleistungService';
 
 interface PhaseManagementPageProps {
   onNavigateToDashboard?: () => void;
@@ -37,6 +43,19 @@ const PhaseManagementPage: React.FC<PhaseManagementPageProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [showHistorie, setShowHistorie] = useState(false);
+  const [selectedTradeHistorie, setSelectedTradeHistorie] = useState<{
+    phaseId: string;
+    tradeId: string;
+    tradeName: string;
+    phaseName: string;
+  } | null>(null);
+  const [historieData, setHistorieData] = useState<Array<{
+    datum: Date;
+    von: string;
+    wert: boolean;
+    kommentar?: string;
+  }>>([]);
 
   // Load phases on component mount
   useEffect(() => {
@@ -139,6 +158,67 @@ const PhaseManagementPage: React.FC<PhaseManagementPageProps> = ({
     } catch (error: any) {
       console.error('Error initializing default phases:', error);
       alert('Fehler beim Initialisieren der Standard-Phasen: ' + error.message);
+    }
+  };
+
+  const handleToggleEigenleistung = async (
+    phaseId: string,
+    tradeId: string,
+    currentEigenleistung: boolean
+  ) => {
+    try {
+      if (!currentUser?.uid || !userData || !selectedProject) {
+        throw new Error('Benutzer nicht authentifiziert oder kein Projekt ausgewählt');
+      }
+
+      const tenantId = userData.tenantId || currentUser.uid;
+      const newEigenleistung = !currentEigenleistung;
+      
+      await phaseService.setTradeEigenleistung(
+        selectedProject,
+        phaseId,
+        tradeId,
+        tenantId,
+        newEigenleistung,
+        currentUser.uid,
+        `Eigenleistung ${newEigenleistung ? 'aktiviert' : 'deaktiviert'}`
+      );
+      
+      // Reload phases to show updated data
+      loadPhases();
+    } catch (error: any) {
+      console.error('Error toggling eigenleistung:', error);
+      alert('Fehler beim Ändern der Eigenleistung: ' + error.message);
+    }
+  };
+
+  const handleShowHistorie = async (
+    phaseId: string,
+    tradeId: string,
+    tradeName: string,
+    phaseName: string
+  ) => {
+    try {
+      if (!currentUser?.uid || !userData || !selectedProject) {
+        throw new Error('Benutzer nicht authentifiziert oder kein Projekt ausgewählt');
+      }
+
+      const tenantId = userData.tenantId || currentUser.uid;
+      
+      // Load historie data
+      const historie = await eigenleistungService.getEigenleistungHistorie(
+        tenantId,
+        selectedProject,
+        phaseId,
+        tradeId
+      );
+      
+      setHistorieData(historie);
+      setSelectedTradeHistorie({ phaseId, tradeId, tradeName, phaseName });
+      setShowHistorie(true);
+    } catch (error: any) {
+      console.error('Error loading historie:', error);
+      alert('Fehler beim Laden der Historie: ' + error.message);
     }
   };
 
@@ -364,7 +444,17 @@ const PhaseManagementPage: React.FC<PhaseManagementPageProps> = ({
                       {phase.trades.slice(0, 3).map((trade) => (
                         <div key={trade.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">{trade.name}</p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-medium text-slate-900">{trade.name}</p>
+                              {/* Eigenleistung Badge */}
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                trade.eigenleistung 
+                                  ? 'bg-orange-100 text-orange-800 border border-orange-200' 
+                                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+                              }`}>
+                                {trade.eigenleistung ? 'Eigenleistung' : 'Fremdleistung'}
+                              </span>
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                               <div className="flex-1 bg-slate-200 rounded-full h-2">
                                 <div 
@@ -374,6 +464,28 @@ const PhaseManagementPage: React.FC<PhaseManagementPageProps> = ({
                               </div>
                               <span className="text-xs text-slate-500">{trade.progress || 0}%</span>
                             </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Historie Button */}
+                            <button
+                              onClick={() => handleShowHistorie(phase.id, trade.id, trade.name, phase.name)}
+                              className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="Eigenleistungs-Historie anzeigen"
+                            >
+                              <History className="w-4 h-4" />
+                            </button>
+                            {/* Eigenleistung Toggle */}
+                            <button
+                              onClick={() => handleToggleEigenleistung(phase.id, trade.id, trade.eigenleistung || false)}
+                              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                                trade.eigenleistung
+                                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                              title={trade.eigenleistung ? 'Eigenleistung deaktivieren' : 'Eigenleistung aktivieren'}
+                            >
+                              {trade.eigenleistung ? 'Eigenleistung' : 'Fremdleistung'}
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -388,6 +500,94 @@ const PhaseManagementPage: React.FC<PhaseManagementPageProps> = ({
               </motion.div>
             ))}
           </div>
+        )}
+
+        {/* Historie Modal */}
+        {showHistorie && selectedTradeHistorie && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowHistorie(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <History className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">
+                        Eigenleistungs-Historie
+                      </h3>
+                      <p className="text-slate-600 mt-1">
+                        {selectedTradeHistorie.tradeName} - {selectedTradeHistorie.phaseName}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowHistorie(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {historieData.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Info className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600">Keine Historie verfügbar</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {historieData.map((entry, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg"
+                      >
+                        <div className={`p-2 rounded-full ${
+                          entry.wert ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {entry.wert ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-slate-900">
+                              {entry.wert ? 'Eigenleistung aktiviert' : 'Eigenleistung deaktiviert'}
+                            </span>
+                            <span className="text-sm text-slate-500">
+                              von {entry.von}
+                            </span>
+                          </div>
+                          <div className="text-sm text-slate-600">
+                            {entry.datum.toLocaleString('de-DE')}
+                          </div>
+                          {entry.kommentar && (
+                            <div className="text-sm text-slate-700 mt-2 italic">
+                              "{entry.kommentar}"
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </motion.div>
     </div>

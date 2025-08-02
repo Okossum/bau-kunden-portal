@@ -27,6 +27,15 @@ import {
 export interface TradeWithProgress extends Gewerk {
   progress: number;
   status: string;
+  eigenleistung?: boolean;
+  eigenleistungGeaendertAm?: Date;
+  eigenleistungGeaendertVon?: string;
+  eigenleistungHistorie?: {
+    datum: Date;
+    von: string;
+    wert: boolean;
+    kommentar?: string;
+  }[];
 }
 
 export interface PhaseWithTrades extends Phase {
@@ -60,6 +69,19 @@ export class PhaseService {
             id: tradeDoc.id,
             progress: tradeData.progress ?? 0,
             status: tradeData.status ?? 'Geplant',
+            eigenleistung: tradeData.eigenleistung ?? false,
+            eigenleistungGeaendertAm: tradeData.eigenleistungGeaendertAm ? 
+              (tradeData.eigenleistungGeaendertAm instanceof Date ? 
+                tradeData.eigenleistungGeaendertAm : 
+                (tradeData.eigenleistungGeaendertAm as any).toDate()) : 
+              undefined,
+            eigenleistungGeaendertVon: tradeData.eigenleistungGeaendertVon,
+            eigenleistungHistorie: tradeData.eigenleistungHistorie?.map((entry: any) => ({
+              datum: entry.datum?.toDate() || new Date(),
+              von: entry.von,
+              wert: entry.wert,
+              kommentar: entry.kommentar,
+            })),
           };
         });
 
@@ -205,6 +227,7 @@ export class PhaseService {
         ...tradeData,
         progress: 0,
         status: 'Geplant',
+        eigenleistung: false, // Standard: Keine Eigenleistung
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -244,6 +267,67 @@ export class PhaseService {
     } catch (error) {
       console.error('PhaseService: Error removing trade:', error);
       throw new Error('Fehler beim Entfernen des Gewerks');
+    }
+  }
+
+  // Eigenleistung für ein Gewerk setzen
+  async setTradeEigenleistung(
+    projectId: string,
+    phaseId: string,
+    tradeId: string,
+    tenantId: string,
+    eigenleistung: boolean,
+    changedBy: string,
+    kommentar?: string
+  ): Promise<void> {
+    console.log('PhaseService: Setting eigenleistung for trade:', tradeId, 'to:', eigenleistung);
+    
+    try {
+      const tradeRef = doc(
+        db,
+        'tenants',
+        tenantId,
+        'projects',
+        projectId,
+        this.phaseCollection,
+        phaseId,
+        this.tradeCollection,
+        tradeId
+      );
+
+      // Aktuelle Daten laden
+      const tradeDoc = await getDoc(tradeRef);
+      if (!tradeDoc.exists()) {
+        throw new Error('Gewerk nicht gefunden');
+      }
+
+      const currentData = tradeDoc.data();
+      const currentHistorie = currentData.eigenleistungHistorie || [];
+
+      // Neue Historie-Eintrag erstellen
+      const newHistorieEntry = {
+        datum: Timestamp.now(),
+        von: changedBy,
+        wert: eigenleistung,
+        kommentar: kommentar || '',
+      };
+
+      // Historie erweitern (maximal 10 Einträge behalten)
+      const updatedHistorie = [...currentHistorie, newHistorieEntry].slice(-10);
+
+      // Gewerk aktualisieren
+      await updateDoc(tradeRef, {
+        eigenleistung,
+        eigenleistungGeaendertAm: Timestamp.now(),
+        eigenleistungGeaendertVon: changedBy,
+        eigenleistungHistorie: updatedHistorie,
+        updatedAt: Timestamp.now(),
+      });
+      
+      console.log('PhaseService: Eigenleistung updated successfully');
+    } catch (error) {
+      console.error('PhaseService: Error setting eigenleistung:', error);
+      throw new Error('Fehler beim Setzen der Eigenleistung');
     }
   }
 

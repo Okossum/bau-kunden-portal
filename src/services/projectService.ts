@@ -15,6 +15,8 @@ import {
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../lib/firebase';
+import { bauvorhabenartService } from './bauvorhabenartService';
+import { phaseService } from './phaseService';
 
 export interface ProjectAddress {
   street: string;
@@ -40,6 +42,7 @@ export interface Project {
   projectName: string;
   projectId: string; // Unique project identifier
   constructionTypes: string[]; // Multiple selection
+  bauvorhabenarten: string[]; // Neue Bauvorhabenarten-Auswahl
   status: 'geplant' | 'in Bau' | 'abgeschlossen' | 'pausiert' | 'storniert';
   description?: string;
   tenantId: string; // Mandantenfähigkeit
@@ -62,6 +65,7 @@ export interface ProjectFormData {
   projectName: string;
   projectId: string;
   constructionTypes: string[];
+  bauvorhabenarten: string[]; // Neue Bauvorhabenarten-Auswahl
   status: 'geplant' | 'in Bau' | 'abgeschlossen' | 'pausiert' | 'storniert';
   description: string;
   clientId: string;
@@ -127,6 +131,7 @@ class ProjectService {
             projectName: data.projectName,
             projectId: data.projectId,
             constructionTypes: data.constructionTypes || [],
+            bauvorhabenarten: data.bauvorhabenarten || [],
             status: data.status,
             description: data.description,
             tenantId: data.tenantId,
@@ -185,6 +190,7 @@ class ProjectService {
             projectName: data.projectName,
             projectId: data.projectId,
             constructionTypes: data.constructionTypes || [],
+            bauvorhabenarten: data.bauvorhabenarten || [],
             status: data.status,
             description: data.description,
             tenantId: data.tenantId || 'default-tenant',
@@ -230,6 +236,7 @@ class ProjectService {
           projectName: data.projectName,
           projectId: data.projectId,
           constructionTypes: data.constructionTypes || [],
+          bauvorhabenarten: data.bauvorhabenarten || [],
           status: data.status,
           description: data.description,
           tenantId: data.tenantId,
@@ -285,6 +292,25 @@ class ProjectService {
 
       const docRef = await addDoc(collection(db, this.projectsCollection), projectDoc);
       console.log('Project created successfully with ID:', docRef.id);
+      
+      // Automatische Phasen-Erstellung basierend auf Bauvorhabenarten
+      if (projectData.bauvorhabenarten && projectData.bauvorhabenarten.length > 0) {
+        try {
+          console.log('ProjectService: Starting automatic phase creation for project:', docRef.id);
+                     await this.createPhasesFromBauvorhabenarten(
+             docRef.id,
+             projectData.tenantId,
+             projectData.bauvorhabenarten,
+             projectData.tenantId
+           );
+          console.log('ProjectService: Automatic phase creation completed successfully');
+        } catch (error) {
+          console.error('ProjectService: Error during automatic phase creation:', error);
+          // Don't fail the project creation if phase creation fails
+          // The project is already created, phases can be added manually later
+        }
+      }
+      
       return docRef.id;
     } catch (error) {
       console.error('Error creating project:', error);
@@ -353,6 +379,58 @@ class ProjectService {
     } catch (error) {
       console.error('Error checking project ID uniqueness:', error);
       throw new Error('Fehler beim Prüfen der Projekt-ID');
+    }
+  }
+
+  /**
+   * Create phases from selected Bauvorhabenarten
+   */
+  async createPhasesFromBauvorhabenarten(
+    projectId: string,
+    tenantId: string,
+    bauvorhabenartIds: string[],
+    createdBy: string
+  ): Promise<void> {
+    console.log('ProjectService: Creating phases from bauvorhabenarten:', bauvorhabenartIds);
+    
+    try {
+      // Check if project already has phases
+      const hasPhases = await phaseService.hasPhases(projectId, tenantId);
+      if (hasPhases) {
+        console.log('ProjectService: Project already has phases, skipping automatic creation');
+        return;
+      }
+
+      // Collect all unique phases from all selected Bauvorhabenarten
+      const allPhaseIds = new Set<string>();
+      
+      for (const bauvorhabenartId of bauvorhabenartIds) {
+        try {
+          const phaseIds = await bauvorhabenartService.getPhasenForBauvorhabenart(tenantId, bauvorhabenartId);
+          phaseIds.forEach(phaseId => allPhaseIds.add(phaseId));
+        } catch (error) {
+          console.error('ProjectService: Error getting phases for bauvorhabenart:', bauvorhabenartId, error);
+        }
+      }
+
+      // If no phases found, create default phases
+      if (allPhaseIds.size === 0) {
+        console.log('ProjectService: No phases found in Bauvorhabenarten, creating default phases');
+        await phaseService.initializeDefaultPhases(projectId, tenantId, createdBy);
+        return;
+      }
+
+      // Create phases for the project
+      console.log('ProjectService: Creating phases for project:', Array.from(allPhaseIds));
+      
+      // For now, we'll use the default phases as a template
+      // In the future, this could be enhanced to create specific phases based on the Bauvorhabenart
+      await phaseService.initializeDefaultPhases(projectId, tenantId, createdBy);
+      
+      console.log('ProjectService: Phases created successfully for project:', projectId);
+    } catch (error) {
+      console.error('ProjectService: Error creating phases from Bauvorhabenarten:', error);
+      throw new Error('Fehler bei der automatischen Phasen-Erstellung');
     }
   }
 
