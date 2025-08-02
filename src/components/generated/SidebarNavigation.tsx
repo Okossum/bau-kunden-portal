@@ -28,9 +28,8 @@ interface SidebarNavigationProps {
   onNavigateToDashboard?: () => void;
   onNavigateToDocuments?: () => void;
   onNavigateToDocumentManagement?: () => void;
-  onNavigateToDocumentDebug?: () => void;
-  onNavigateToSimpleDebug?: () => void;
-  onNavigateToTestDebug?: () => void;
+
+
   onNavigateToUserManagement?: () => void;
   onNavigateToProjectManagement?: () => void;
   onNavigateToMandantManagement?: () => void;
@@ -44,9 +43,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onNavigateToDashboard,
   onNavigateToDocuments,
   onNavigateToDocumentManagement,
-  onNavigateToDocumentDebug,
-  onNavigateToSimpleDebug,
-  onNavigateToTestDebug,
+
   onNavigateToUserManagement,
   onNavigateToProjectManagement,
   onNavigateToMandantManagement,
@@ -78,27 +75,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       onClick: onNavigateToDocumentManagement,
       adminOnly: true
     },
-    {
-      id: 'document-debug',
-      label: 'Debug Dokumentenverwaltung',
-      icon: <Bug className="w-5 h-5" />,
-      onClick: onNavigateToDocumentDebug,
-      adminOnly: true
-    },
-    {
-      id: 'simple-debug',
-      label: 'Simple Debug',
-      icon: <Bug className="w-5 h-5" />,
-      onClick: onNavigateToSimpleDebug,
-      adminOnly: true
-    },
-    {
-      id: 'test-debug',
-      label: '🧪 Test Debug',
-      icon: <Bug className="w-5 h-5" />,
-      onClick: onNavigateToTestDebug,
-      adminOnly: true
-    },
+
     {
       id: 'projects',
       label: 'Projekte',

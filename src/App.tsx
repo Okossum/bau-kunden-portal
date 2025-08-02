@@ -6,9 +6,7 @@ import SignInPage from './components/generated/SignInPage';
 import CustomerDashboard from './components/generated/CustomerDashboard';
 import DocumentPortal from './components/generated/DocumentPortal';
 import DocumentManagementPage from './components/generated/DocumentManagementPage';
-import DocumentManagementDebug from './components/generated/DocumentManagementDebug';
-import SimpleDebug from './components/generated/SimpleDebug';
-import TestDebug from './components/generated/TestDebug';
+
 import { UserManagementPage } from './components/generated/UserManagementPage';
 import ProjectManagementPage from './components/generated/ProjectManagementPage';
 import ProjectProgressPage from './components/generated/ProjectProgressPage';
@@ -27,7 +25,7 @@ let theme: Theme = 'light';
 
 function AppContent() {
   const { currentUser, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'document-debug' | 'simple-debug' | 'test-debug' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management' | 'phase-management' | 'bauvorhabenart-management' | 'eigenleistung-report'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management' | 'phase-management' | 'bauvorhabenart-management' | 'eigenleistung-report'>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAdminSetup, setShowAdminSetup] = useState(false);
 
@@ -70,9 +68,7 @@ function AppContent() {
   const handleNavigateToDashboard = () => setCurrentView('dashboard');
   const handleNavigateToDocuments = () => setCurrentView('documents');
   const handleNavigateToDocumentManagement = () => setCurrentView('document-management');
-  const handleNavigateToDocumentDebug = () => setCurrentView('document-debug');
-  const handleNavigateToSimpleDebug = () => setCurrentView('simple-debug');
-  const handleNavigateToTestDebug = () => setCurrentView('test-debug');
+
   const handleNavigateToUserManagement = () => setCurrentView('user-management');
   const handleNavigateToProjectManagement = () => setCurrentView('project-management');
   const handleNavigateToMandantManagement = () => setCurrentView('mandant-management');
@@ -90,9 +86,7 @@ function AppContent() {
     onNavigateToDashboard: handleNavigateToDashboard,
     onNavigateToDocuments: handleNavigateToDocuments,
     onNavigateToDocumentManagement: handleNavigateToDocumentManagement,
-    onNavigateToDocumentDebug: handleNavigateToDocumentDebug,
-    onNavigateToSimpleDebug: handleNavigateToSimpleDebug,
-    onNavigateToTestDebug: handleNavigateToTestDebug,
+
     onNavigateToUserManagement: handleNavigateToUserManagement,
     onNavigateToProjectManagement: handleNavigateToProjectManagement,
     onNavigateToMandantManagement: handleNavigateToMandantManagement,
@@ -137,24 +131,7 @@ function AppContent() {
             />
           </AppLayout>
         );
-      case 'document-debug':
-        return (
-          <AppLayout {...getCommonNavigationProps()}>
-            <DocumentManagementDebug />
-          </AppLayout>
-        );
-      case 'simple-debug':
-        return (
-          <AppLayout {...getCommonNavigationProps()}>
-            <SimpleDebug />
-          </AppLayout>
-        );
-      case 'test-debug':
-        return (
-          <AppLayout {...getCommonNavigationProps()}>
-            <TestDebug />
-          </AppLayout>
-        );
+
       case 'user-management':
         return (
           <AppLayout {...getCommonNavigationProps()}>

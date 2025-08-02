@@ -1,15 +1,13 @@
 import React from 'react';
 import SidebarNavigation from './SidebarNavigation';
-import DebugSidebar from './DebugSidebar';
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
   onNavigateToDashboard?: () => void;
   onNavigateToDocuments?: () => void;
   onNavigateToDocumentManagement?: () => void;
-  onNavigateToDocumentDebug?: () => void;
-  onNavigateToSimpleDebug?: () => void;
-  onNavigateToTestDebug?: () => void;
+
   onNavigateToUserManagement?: () => void;
   onNavigateToProjectManagement?: () => void;
   onNavigateToMandantManagement?: () => void;
@@ -24,9 +22,7 @@ const AppLayout: React.FC<AppLayoutProps> = React.memo(({
   onNavigateToDashboard,
   onNavigateToDocuments,
   onNavigateToDocumentManagement,
-  onNavigateToDocumentDebug,
-  onNavigateToSimpleDebug,
-  onNavigateToTestDebug,
+
   onNavigateToUserManagement,
   onNavigateToProjectManagement,
   onNavigateToMandantManagement,
@@ -38,23 +34,18 @@ const AppLayout: React.FC<AppLayoutProps> = React.memo(({
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <DebugSidebar componentName="SidebarNavigation">
-        <SidebarNavigation
+              <SidebarNavigation
           onNavigateToDashboard={onNavigateToDashboard}
           onNavigateToDocuments={onNavigateToDocuments}
           onNavigateToDocumentManagement={onNavigateToDocumentManagement}
-          onNavigateToDocumentDebug={onNavigateToDocumentDebug}
-          onNavigateToSimpleDebug={onNavigateToSimpleDebug}
-          onNavigateToTestDebug={onNavigateToTestDebug}
           onNavigateToUserManagement={onNavigateToUserManagement}
           onNavigateToProjectManagement={onNavigateToProjectManagement}
-                  onNavigateToMandantManagement={onNavigateToMandantManagement}
-        onNavigateToGewerkManagement={onNavigateToGewerkManagement}
-        onNavigateToPhaseManagement={onNavigateToPhaseManagement}
-        onNavigateToBauvorhabenartManagement={onNavigateToBauvorhabenartManagement}
-        onNavigateToEigenleistungReport={onNavigateToEigenleistungReport}
+          onNavigateToMandantManagement={onNavigateToMandantManagement}
+          onNavigateToGewerkManagement={onNavigateToGewerkManagement}
+          onNavigateToPhaseManagement={onNavigateToPhaseManagement}
+          onNavigateToBauvorhabenartManagement={onNavigateToBauvorhabenartManagement}
+          onNavigateToEigenleistungReport={onNavigateToEigenleistungReport}
         />
-      </DebugSidebar>
       
       {/* Main Content */}
       <div className="flex-1 overflow-auto">

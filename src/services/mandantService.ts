@@ -30,8 +30,6 @@ export class MandantService {
    */
   async createMandant(data: CreateMandantRequest): Promise<Mandant> {
     try {
-      console.log('MandantService: Creating new mandant:', data);
-
       const mandantId = this.generateUUID();
       const mandantData = {
         mandantId: mandantId,
@@ -43,12 +41,8 @@ export class MandantService {
         aktive: data.aktive !== undefined ? data.aktive : true
       };
 
-      console.log('MandantService: Generated mandantId:', mandantId);
-      console.log('MandantService: Mandant data to save:', mandantData);
-
       // Use setDoc with the mandantId as document ID to match Firestore rules
       const docRef = doc(db, this.mandantenCollection, mandantId);
-      console.log('MandantService: Document reference:', docRef.path);
       
       await setDoc(docRef, mandantData);
       
@@ -59,7 +53,7 @@ export class MandantService {
         firmenDaten: mandantData.firmenDaten || undefined
       };
 
-      console.log('MandantService: Mandant created successfully:', createdMandant);
+
       return createdMandant;
     } catch (error) {
       console.error('MandantService: Error creating mandant:', error);
@@ -72,7 +66,7 @@ export class MandantService {
    */
   async getAllMandanten(): Promise<Mandant[]> {
     try {
-      console.log('MandantService: Fetching all mandanten...');
+
 
       const q = query(
         collection(db, this.mandantenCollection),
@@ -94,7 +88,7 @@ export class MandantService {
         });
       });
 
-      console.log('MandantService: Retrieved mandanten:', mandanten.length);
+
       return mandanten;
     } catch (error) {
       console.error('MandantService: Error fetching mandanten:', error);
@@ -107,13 +101,13 @@ export class MandantService {
    */
   async getActiveMandanten(): Promise<Mandant[]> {
     try {
-      console.log('MandantService: Fetching active mandanten...');
+
 
       // Get all mandanten and filter client-side to avoid index issues
       const allMandanten = await this.getAllMandanten();
       const activeMandanten = allMandanten.filter(mandant => mandant.aktive !== false);
 
-      console.log('MandantService: Retrieved active mandanten:', activeMandanten.length);
+
       return activeMandanten;
     } catch (error) {
       console.error('MandantService: Error fetching active mandanten:', error);
