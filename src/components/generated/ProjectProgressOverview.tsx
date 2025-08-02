@@ -11,7 +11,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { PhaseService } from '../../services/phaseService';
+import { phaseService } from '../../services/phaseService';
 import { PhaseWithTrades, TradeWithProgress } from '../../services/phaseService';
 import PhaseItem from './PhaseItem';
 
@@ -45,7 +45,6 @@ const ProjectProgressOverview: React.FC<ProjectProgressOverviewProps> = ({
         throw new Error('Benutzer nicht authentifiziert');
       }
 
-      const phaseService = new PhaseService();
       const tenantId = userData.tenantId || currentUser.uid;
       const phasesWithProgress = await phaseService.getPhasesWithProgress(projectId, tenantId);
       
@@ -89,7 +88,6 @@ const ProjectProgressOverview: React.FC<ProjectProgressOverviewProps> = ({
         throw new Error('Benutzer nicht authentifiziert');
       }
 
-      const phaseService = new PhaseService();
       const tenantId = userData.tenantId || currentUser.uid;
       
       // Update progress in Firestore

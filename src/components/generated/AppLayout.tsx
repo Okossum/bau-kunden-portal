@@ -14,6 +14,7 @@ interface AppLayoutProps {
   onNavigateToProjectManagement?: () => void;
   onNavigateToMandantManagement?: () => void;
   onNavigateToGewerkManagement?: () => void;
+  onNavigateToPhaseManagement?: () => void;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = React.memo(({
@@ -27,7 +28,8 @@ const AppLayout: React.FC<AppLayoutProps> = React.memo(({
   onNavigateToUserManagement,
   onNavigateToProjectManagement,
   onNavigateToMandantManagement,
-  onNavigateToGewerkManagement
+  onNavigateToGewerkManagement,
+  onNavigateToPhaseManagement
 }) => {
   return (
     <div className="flex h-screen bg-gray-50">
@@ -42,8 +44,9 @@ const AppLayout: React.FC<AppLayoutProps> = React.memo(({
           onNavigateToTestDebug={onNavigateToTestDebug}
           onNavigateToUserManagement={onNavigateToUserManagement}
           onNavigateToProjectManagement={onNavigateToProjectManagement}
-          onNavigateToMandantManagement={onNavigateToMandantManagement}
-          onNavigateToGewerkManagement={onNavigateToGewerkManagement}
+                  onNavigateToMandantManagement={onNavigateToMandantManagement}
+        onNavigateToGewerkManagement={onNavigateToGewerkManagement}
+        onNavigateToPhaseManagement={onNavigateToPhaseManagement}
         />
       </DebugSidebar>
       

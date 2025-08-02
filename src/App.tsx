@@ -19,12 +19,13 @@ import SidebarNavigation from './components/generated/SidebarNavigation';
 import AppLayout from './components/generated/AppLayout';
 import MandantManagementPage from './components/generated/MandantManagementPage';
 import GewerkManagementPage from './components/generated/GewerkManagementPage';
+import PhaseManagementPage from './components/generated/PhaseManagementPage';
 
 let theme: Theme = 'light';
 
 function AppContent() {
   const { currentUser, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'document-debug' | 'simple-debug' | 'test-debug' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'documents' | 'document-management' | 'document-debug' | 'simple-debug' | 'test-debug' | 'user-management' | 'project-management' | 'project-progress' | 'mandant-management' | 'gewerk-management' | 'phase-management'>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAdminSetup, setShowAdminSetup] = useState(false);
 
@@ -75,6 +76,7 @@ function AppContent() {
     const handleNavigateToProjectManagement = () => setCurrentView('project-management');
     const handleNavigateToMandantManagement = () => setCurrentView('mandant-management');
     const handleNavigateToGewerkManagement = () => setCurrentView('gewerk-management');
+  const handleNavigateToPhaseManagement = () => setCurrentView('phase-management');
     const handleNavigateToProjectProgress = (projectId: string) => {
       setSelectedProjectId(projectId);
       setCurrentView('project-progress');
@@ -93,6 +95,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <CustomerDashboard
               onNavigateToDocuments={handleNavigateToDocuments}
@@ -115,6 +119,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <DocumentPortal
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -133,6 +139,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <DocumentManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -152,6 +160,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <DocumentManagementDebug />
           </AppLayout>
@@ -168,6 +178,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <SimpleDebug />
           </AppLayout>
@@ -184,6 +196,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <TestDebug />
           </AppLayout>
@@ -200,6 +214,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
                         <UserManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -220,6 +236,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <ProjectManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -240,6 +258,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <ProjectProgressPage
               projectId={selectedProjectId}
@@ -261,6 +281,7 @@ function AppContent() {
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
             onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <MandantManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
@@ -280,8 +301,29 @@ function AppContent() {
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
             onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <GewerkManagementPage
+              onNavigateToDashboard={handleNavigateToDashboard}
+            />
+          </AppLayout>
+        );
+      case 'phase-management':
+        return (
+          <AppLayout
+            onNavigateToDashboard={handleNavigateToDashboard}
+            onNavigateToDocuments={handleNavigateToDocuments}
+            onNavigateToDocumentManagement={handleNavigateToDocumentManagement}
+            onNavigateToDocumentDebug={handleNavigateToDocumentDebug}
+            onNavigateToSimpleDebug={handleNavigateToSimpleDebug}
+            onNavigateToTestDebug={handleNavigateToTestDebug}
+            onNavigateToUserManagement={handleNavigateToUserManagement}
+            onNavigateToProjectManagement={handleNavigateToProjectManagement}
+            onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
+          >
+            <PhaseManagementPage
               onNavigateToDashboard={handleNavigateToDashboard}
             />
           </AppLayout>
@@ -298,6 +340,8 @@ function AppContent() {
             onNavigateToUserManagement={handleNavigateToUserManagement}
             onNavigateToProjectManagement={handleNavigateToProjectManagement}
             onNavigateToMandantManagement={handleNavigateToMandantManagement}
+            onNavigateToGewerkManagement={handleNavigateToGewerkManagement}
+            onNavigateToPhaseManagement={handleNavigateToPhaseManagement}
           >
             <CustomerDashboard
               onNavigateToDocuments={handleNavigateToDocuments}

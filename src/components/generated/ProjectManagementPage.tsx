@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import ProjectService, { Project } from '../../services/projectService';
+import { phaseService } from '../../services/phaseService';
 import ProjectForm from './ProjectForm';
 
 
@@ -179,8 +180,25 @@ const ProjectManagementPage: React.FC<ProjectManagementPageProps> = ({
   const handleInitializePhasesAndTrades = async () => {
     try {
       setLoading(true);
-      // TODO: Implement Phase 2 initialization when ready
-      alert('Phase 2 Initialisierung wird in Kürze implementiert!');
+      
+      if (!currentUser?.uid || !userData) {
+        throw new Error('Benutzer nicht authentifiziert');
+      }
+
+      const tenantId = userData.tenantId || currentUser.uid;
+      
+      // Für jedes Projekt Standard-Phasen initialisieren
+      for (const project of projects) {
+        if (project.id) {
+          const hasPhases = await phaseService.hasPhases(project.id, tenantId);
+          if (!hasPhases) {
+            console.log(`Initialisiere Standard-Phasen für Projekt: ${project.projectName}`);
+            await phaseService.initializeDefaultPhases(project.id, tenantId, currentUser.uid);
+          }
+        }
+      }
+      
+      alert('Standard-Phasen erfolgreich für alle Projekte initialisiert!');
     } catch (error: any) {
       console.error('Error initializing phases and trades:', error);
       alert('Fehler beim Initialisieren der Phasen und Gewerke: ' + error.message);

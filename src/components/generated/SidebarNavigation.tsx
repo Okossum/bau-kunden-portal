@@ -10,7 +10,8 @@ import {
   X,
   Bug,
   Building,
-  Wrench
+  Wrench,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -33,6 +34,7 @@ interface SidebarNavigationProps {
   onNavigateToProjectManagement?: () => void;
   onNavigateToMandantManagement?: () => void;
   onNavigateToGewerkManagement?: () => void;
+  onNavigateToPhaseManagement?: () => void;
 }
 
 const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
@@ -45,7 +47,8 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   onNavigateToUserManagement,
   onNavigateToProjectManagement,
   onNavigateToMandantManagement,
-  onNavigateToGewerkManagement
+  onNavigateToGewerkManagement,
+  onNavigateToPhaseManagement
 }) => {
   const { currentUser, userData, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -116,6 +119,13 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       label: 'Gewerke-Verwaltung',
       icon: <Wrench className="w-5 h-5" />,
       onClick: onNavigateToGewerkManagement,
+      adminOnly: true
+    },
+    {
+      id: 'phase-management',
+      label: 'Phasen-Verwaltung',
+      icon: <Calendar className="w-5 h-5" />,
+      onClick: onNavigateToPhaseManagement,
       adminOnly: true
     }
   ];
